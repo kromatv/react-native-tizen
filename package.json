@@ -23,29 +23,42 @@
     "example"
   ],
   "bin": {
-    "rn-tizen": "./src/cli/main.ts"
+    "rn-tizen": "./dist/cli/main.js"
   },
   "exports": {
-    "./metro": "./src/metro/with-tizen.ts",
-    "./voice": "./src/api/voice.ts",
-    "./preview": "./src/api/preview.ts",
-    "./preview-json": "./src/api/preview-json.ts",
+    "./metro": {
+      "types": "./dist/metro/with-tizen.d.ts",
+      "default": "./dist/metro/with-tizen.js"
+    },
+    "./voice": {
+      "types": "./dist/api/voice.d.ts",
+      "default": "./dist/api/voice.js"
+    },
+    "./preview": {
+      "types": "./dist/api/preview.d.ts",
+      "default": "./dist/api/preview.js"
+    },
+    "./preview-json": {
+      "types": "./dist/api/preview-json.d.ts",
+      "default": "./dist/api/preview-json.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "src",
+    "dist",
     "runtime",
     "shell",
     "simulator",
     "react-native-overrides",
     "docs",
-    "README.md",
-    "!src/**/*.test.ts"
+    "README.md"
   ],
   "engines": {
-    "bun": ">=1.4.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc -p src/api/tsconfig.build.json",
+    "prepack": "bun run build",
     "typecheck": "tsc -p tsconfig.json && tsc -p src/api && tsc -p example/tsconfig.json",
     "test": "vitest run",
     "lint": "oxlint --ignore-path .gitignore --deny-warnings .",

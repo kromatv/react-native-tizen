@@ -25,7 +25,7 @@ Verified on a Samsung TV running Tizen 9.0 (armv7), built from macOS.
 
 - A Samsung certificate for your TV: Tizen Studio, Tools, Certificate Manager,
   a Samsung profile with your TV's DUID. Make it the active profile.
-- [Bun](https://bun.sh) 1.4 or newer, which runs the CLI.
+- [Node.js](https://nodejs.org) 22.13 or newer, which runs the CLI and Expo.
 
 ### 2. Add the package
 
@@ -60,8 +60,8 @@ your computer's IP address, then restart the TV.
 ### 4. Check, then run
 
 ```sh
-bunx rn-tizen doctor
-bunx rn-tizen run --device 192.168.1.107
+npx rn-tizen doctor
+npx rn-tizen run --device 192.168.1.107
 ```
 
 `doctor` names the exact fix for anything missing. The first `run` builds the
@@ -71,7 +71,7 @@ changed. It installs the app, launches it and prints its logs until Ctrl+C.
 To build a package without a TV, for the store or to install by hand:
 
 ```sh
-bunx rn-tizen package --release
+npx rn-tizen package --release
 ```
 
 ## Documentation

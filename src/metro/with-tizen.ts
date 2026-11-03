@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, relative, sep } from 'node:path';
+import { dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { UPSTREAM_TRANSFORMER_ENV } from './tizen-babel-transformer-env.ts';
 
@@ -12,7 +12,7 @@ export const FALLBACK_PLATFORM = 'android';
 
 const OVERRIDES_DIR = fileURLToPath(new URL('../../react-native-overrides/', import.meta.url));
 const TIZEN_BABEL_TRANSFORMER = fileURLToPath(
-  new URL('./tizen-babel-transformer.ts', import.meta.url),
+  new URL(`./tizen-babel-transformer${extname(import.meta.url)}`, import.meta.url),
 );
 const OVERRIDE_EXTENSIONS = ['.ts', '.js'] as const;
 

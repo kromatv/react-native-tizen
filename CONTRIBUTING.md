@@ -61,6 +61,7 @@ ahead of time.
    bun run typecheck
    bun run test
    bun run check        # oxlint and oxfmt; bun run check:fix rewrites
+   bun run build        # dist/, the compiled JavaScript npm ships
    find simulator -name '*.sh' -print0 | xargs -0 shellcheck -x
    ```
 

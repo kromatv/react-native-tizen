@@ -10,10 +10,11 @@ The rules below apply to every change.
 bun run typecheck
 bun run test
 bun run check        # oxlint and oxfmt; bun run check:fix rewrites
+bun run build        # dist/, the compiled JavaScript npm ships
 find simulator -name '*.sh' -print0 | xargs -0 shellcheck -x
 ```
 
-CI runs all four on Linux and macOS. The native runtime is not built in CI, so a
+CI runs all five on Linux and macOS. The native runtime is not built in CI, so a
 change in `runtime/` or `shell/` is checked in the simulator or on a TV, and the
 pull request says which.
 

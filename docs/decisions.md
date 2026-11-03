@@ -190,3 +190,28 @@ and [tizen-smart-hub-preview.md](reference/tizen-smart-hub-preview.md)), and a
 store build must clear them with Samsung's content manager first;
 `rn-tizen package --release` says so.
 
+
+## The package ships JavaScript, and the CLI runs on Node
+
+Node refuses to strip types from a file under `node_modules`, and everything a
+consumer's machine loads from this package goes through Node: Expo's Metro
+config loader, Metro's transform workers and the `rn-tizen` bin. So
+`bun run build` compiles `src/` to `dist/` with `tsc`, one file per source at
+the same depth, which keeps every path taken from `import.meta.url` (the
+package root, `react-native-overrides/`, `runtime/`, `shell/`, `simulator/`)
+right in both trees. `exports` and `bin` point at `dist/`, and `prepack` builds
+it, so neither `npm pack` nor `npm publish` can ship a stale or missing build.
+`react-native-overrides/` and the app API under `src/api/` reach the app
+through Metro, which compiles TypeScript under `node_modules` with the app's
+Babel preset; the overrides ship as TypeScript, the API compiled with its
+declarations.
+
+The CLI uses Node's APIs only, so its `bin` runs on Node 22.13 or newer, the
+floor Expo 58 and React Native 0.88 already set, with no Bun on the user's
+machine; Bun runs it too. Contributors run the sources (`bun src/cli/main.ts`)
+and the example loads `src/` by relative path, so nothing is built during
+development.
+
+Consequence: no source may use a Bun API, and a file that finds another
+through `import.meta.url` must keep the same depth under `src/` and `dist/`.
+CI builds `dist/` and runs the compiled CLI with Node.
