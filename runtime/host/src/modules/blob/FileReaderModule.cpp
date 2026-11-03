@@ -34,8 +34,8 @@ std::string latin1ToUtf8(std::string_view bytes, bool asciiOnly) {
     } else if (asciiOnly) {
       text.append(kReplacementCharacter);
     } else {
-      text.push_back(static_cast<char>(std::byte{0xC0} | (code >> 6)));
-      text.push_back(static_cast<char>(std::byte{0x80} | (code & std::byte{0x3F})));
+      text.push_back(std::to_integer<char>(std::byte{0xC0} | (code >> 6)));
+      text.push_back(std::to_integer<char>(std::byte{0x80} | (code & std::byte{0x3F})));
     }
   }
   return text;
