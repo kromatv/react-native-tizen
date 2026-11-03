@@ -1,8 +1,8 @@
 const path = require('node:path');
 const { getDefaultConfig } = require('expo/metro-config');
-const { withTizen } = require('@kromatv/react-native-tizen/metro');
+const { withTizen } = require('../src/metro/with-tizen.ts');
 
-const workspaceRoot = path.resolve(__dirname, '../../..');
+const workspaceRoot = path.resolve(__dirname, '..');
 const config = getDefaultConfig(__dirname);
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [

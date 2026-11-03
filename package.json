@@ -5,6 +5,7 @@
   "type": "module",
   "description": "React Native and Expo for Samsung Tizen TVs: Hermes and Fabric run natively, with no web runtime in between.",
   "license": "MIT",
+  "author": "Maxime Scharwath <maxscharwath@gmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kromatv/react-native-tizen.git"
@@ -17,8 +18,19 @@
     "smart-tv",
     "hermes"
   ],
+  "packageManager": "bun@1.4.0",
+  "workspaces": [
+    "example"
+  ],
   "bin": {
     "rn-tizen": "./src/cli/main.ts"
+  },
+  "exports": {
+    "./metro": "./src/metro/with-tizen.ts",
+    "./voice": "./src/api/voice.ts",
+    "./preview": "./src/api/preview.ts",
+    "./preview-json": "./src/api/preview-json.ts",
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
@@ -34,7 +46,12 @@
     "bun": ">=1.4.0"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit && tsc --noEmit -p src/api"
+    "typecheck": "tsc -p tsconfig.json && tsc -p src/api && tsc -p example/tsconfig.json",
+    "test": "vitest run",
+    "lint": "oxlint --ignore-path .gitignore --deny-warnings .",
+    "format": "oxfmt .",
+    "check": "bun run lint && oxfmt --check .",
+    "check:fix": "oxlint --ignore-path .gitignore --fix . && oxfmt ."
   },
   "dependencies": {
     "@formatjs/intl-numberformat": "10.0.2",
@@ -44,14 +61,15 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
-    "typescript": "^7.0.2"
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-sonarjs": "4.2.2",
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
+    "react-native": "npm:react-native-tvos@0.88.0-0",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.5"
   },
-  "exports": {
-    "./metro": "./src/metro/with-tizen.ts",
-    "./voice": "./src/api/voice.ts",
-    "./preview": "./src/api/preview.ts",
-    "./preview-json": "./src/api/preview-json.ts",
-    "./package.json": "./package.json"
-  },
-  "author": "Maxime Scharwath <maxscharwath@gmail.com>"
+  "peerDependencies": {
+    "react-native": ">=0.88.0-0"
+  }
 }

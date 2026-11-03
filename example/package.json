@@ -7,11 +7,10 @@
   "main": "main.ts",
   "scripts": {
     "start": "expo start",
-    "tizen": "rn-tizen run",
+    "tizen": "bun ../src/cli/main.ts run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kromatv/react-native-tizen": "workspace:*",
     "@tabler/icons-react-native": "^3.49.0",
     "expo": "~58.0.16",
     "expo-blur": "~58.0.5",
