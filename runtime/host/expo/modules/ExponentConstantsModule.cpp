@@ -8,6 +8,8 @@
 
 #include <folly/json.h>
 
+#include <stdexcept>
+
 namespace rntizen::expo {
 
 namespace {
@@ -21,7 +23,7 @@ folly::dynamic readAppConfig(const std::string &resourceDirectory) {
   try {
     auto config = folly::parseJson(*text);
     return config.isObject() ? config : folly::dynamic(nullptr);
-  } catch (const std::exception &error) {
+  } catch (const std::runtime_error &error) {
     log(LogLevel::Warning, std::string("Ignoring an unreadable ") + kAppConfigFile + ": " + error.what());
     return nullptr;
   }
