@@ -94,22 +94,15 @@ bool ControlLink::isStopping() {
   return stopping_;
 }
 
-bool ControlLink::adopt(int socket) {
-  std::lock_guard lock(mutex_);
-  if (stopping_) return false;
-  socket_ = socket;
-  return true;
-}
-
-void ControlLink::waitToReconnect() {
-  std::unique_lock lock(mutex_);
-  wake_.wait_for(lock, kReconnectDelay, [this] { return stopping_; });
-}
-
 void ControlLink::run() {
   while (!isStopping()) {
     if (const int socket = connectTcp(host_, port_, kConnectTimeout, [this] { return isStopping(); }); socket >= 0) {
-      const bool adopted = adopt(socket);
+      bool adopted = false;
+      {
+        std::lock_guard lock(mutex_);
+        adopted = !stopping_;
+        if (adopted) socket_ = socket;
+      }
       if (adopted && sendLine(socket, folly::dynamic::object("type", "control")("version", 1))) serve(socket);
       perfRequested_.store(false, std::memory_order_relaxed);
       {
@@ -118,7 +111,8 @@ void ControlLink::run() {
       }
       close(socket);
     }
-    waitToReconnect();
+    std::unique_lock lock(mutex_);
+    wake_.wait_for(lock, kReconnectDelay, [this] { return stopping_; });
   }
 }
 
