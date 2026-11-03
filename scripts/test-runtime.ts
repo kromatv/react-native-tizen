@@ -12,6 +12,7 @@ import { sourcesKey } from '../src/runtime/cmake.ts';
 import { ninjaProgress } from '../src/runtime/ninja-progress.ts';
 import { guestRun } from '../src/simulator/lima.ts';
 import type { Task } from '../src/task.ts';
+import { pathInside } from './path-inside.ts';
 import { lcovToSonar } from './sonar-coverage.ts';
 
 const TESTS = 'rn-tizen-host-tests';
@@ -33,7 +34,7 @@ interface TestBuild {
   readonly coverage: boolean;
 }
 
-const runHere: Runner = (task, command, env = {}, onLine) =>
+const runHere: Runner = (task, command, env, onLine) =>
   task.run(command, { env: { ...process.env, ...env }, onLine });
 const runGuest: Runner = process.platform === 'linux' ? runHere : guestRun;
 
@@ -105,7 +106,6 @@ const { values, positionals } = parseArgs({
   options: { coverage: { type: 'string' } },
 });
 const app = loadAppProject(resolve(positionals[0] ?? 'example'));
-const report = values.coverage === undefined ? null : resolve(values.coverage);
 const reporter = new Reporter({ verbose: process.env.CI === 'true' });
 const { reactNative } = app.packages;
 const runtimeName = `${reactNative.name}-${reactNative.version}-simulator-${sourcesKey(RUNTIME_DIR, reactNative.dir)}`;
@@ -129,8 +129,10 @@ const build: TestBuild = {
   hermesCompilers: join(buildRoot, 'hermes-host', 'ImportHostCompilers.cmake'),
   codegen,
   reactNativeDir: realpathSync(reactNative.dir),
-  coverage: report !== null,
+  coverage: values.coverage !== undefined,
 };
+const report =
+  values.coverage === undefined ? null : pathInside(values.coverage, [PACKAGE_ROOT, build.dir]);
 const profile = join(build.dir, 'tests.profraw');
 
 await reporter.step(
