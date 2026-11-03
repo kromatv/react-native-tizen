@@ -53,6 +53,8 @@ void runQueuedTask(void *data) {
   const std::unique_ptr<std::function<void()>> task(static_cast<std::function<void()> *>(data));
   try {
     (*task)();
+  } catch (const std::exception &error) {
+    logUncaughtException("the main loop", error);
   } catch (...) {
     logUncaughtException("the main loop");
   }

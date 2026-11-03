@@ -9,6 +9,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -48,6 +49,8 @@ class TaskQueueThread final : public facebook::react::MessageQueueThread {
 
  private:
   bool enqueue(std::function<void()> &&task);
+  std::optional<std::function<void()>> nextTask();
+  void runMeasured(const std::function<void()> &task);
   void run();
 
   const std::string name_;

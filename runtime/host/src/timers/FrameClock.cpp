@@ -44,10 +44,12 @@ void FrameClock::close() {
 bool FrameClock::runFrame() {
   try {
     return onFrame_();
+  } catch (const std::exception &error) {
+    logUncaughtException("a frame", error);
   } catch (...) {
     logUncaughtException("a frame");
-    return false;
   }
+  return false;
 }
 
 Eina_Bool FrameClock::tick(void *data) {

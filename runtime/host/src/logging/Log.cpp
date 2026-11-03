@@ -3,6 +3,7 @@
 #include <dlog.h>
 
 #include <exception>
+#include <format>
 #include <mutex>
 #include <string>
 
@@ -66,18 +67,12 @@ void log(LogLevel level, std::string_view message) {
   }
 }
 
+void logUncaughtException(std::string_view boundary, const std::exception &error) noexcept {
+  log(LogLevel::Error, std::format("Uncaught exception on {}: {}", boundary, error.what()));
+}
+
 void logUncaughtException(std::string_view boundary) noexcept {
-  std::string message = "Uncaught exception on ";
-  message += boundary;
-  try {
-    throw;
-  } catch (const std::exception &error) {
-    message += ": ";
-    message += error.what();
-  } catch (...) {
-    message += ", not a std::exception";
-  }
-  log(LogLevel::Error, message);
+  log(LogLevel::Error, std::format("Uncaught exception on {}, not a std::exception", boundary));
 }
 
 void setLogSink(std::shared_ptr<LogSink> sink) {

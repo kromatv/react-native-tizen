@@ -59,11 +59,13 @@ bool TaskQueueThread::runWhileParked(const std::function<void()> &work) {
   auto parked = std::make_shared<std::promise<void>>();
   auto isParked = parked->get_future();
   std::promise<void> released;
-  auto park = [parked = std::move(parked), release = released.get_future().share()] {
-    parked->set_value();
-    release.wait();
-  };
-  if (!enqueue(std::move(park))) return false;
+  if (auto park = [parked = std::move(parked), release = released.get_future().share()] {
+        parked->set_value();
+        release.wait();
+      };
+      !enqueue(std::move(park))) {
+    return false;
+  }
   try {
     isParked.get();
   } catch (const std::future_error &) {
@@ -99,31 +101,38 @@ std::chrono::nanoseconds TaskQueueThread::busyTime() const {
   return std::chrono::nanoseconds(busy);
 }
 
+std::optional<std::function<void()>> TaskQueueThread::nextTask() {
+  std::unique_lock lock(mutex_);
+  wake_.wait(lock, [this] { return quitting_ || !tasks_.empty(); });
+  if (quitting_) return std::nullopt;
+  auto task = std::move(tasks_.front());
+  tasks_.pop_front();
+  return task;
+}
+
+void TaskQueueThread::runMeasured(const std::function<void()> &task) {
+  const bool measured = measured_.load(std::memory_order_relaxed);
+  const auto started = measured ? nowNanos() : 0;
+  if (measured) runningSinceNanos_.store(started, std::memory_order_relaxed);
+  try {
+    task();
+  } catch (const std::exception &error) {
+    logUncaughtException(name_, error);
+  } catch (...) {
+    logUncaughtException(name_);
+  }
+  if (measured) {
+    runningSinceNanos_.store(0, std::memory_order_relaxed);
+    busyNanos_.fetch_add(nowNanos() - started, std::memory_order_relaxed);
+  }
+}
+
 void TaskQueueThread::run() {
   pthread_setname_np(pthread_self(), name_.substr(0, 15).c_str());
-  std::unique_lock lock(mutex_);
-  while (true) {
-    wake_.wait(lock, [this] { return quitting_ || !tasks_.empty(); });
-    if (quitting_) break;
-    auto task = std::move(tasks_.front());
-    tasks_.pop_front();
-    lock.unlock();
-    const bool measured = measured_.load(std::memory_order_relaxed);
-    const auto started = measured ? nowNanos() : 0;
-    if (measured) runningSinceNanos_.store(started, std::memory_order_relaxed);
-    try {
-      task();
-    } catch (...) {
-      logUncaughtException(name_);
-    }
-    if (measured) {
-      runningSinceNanos_.store(0, std::memory_order_relaxed);
-      busyNanos_.fetch_add(nowNanos() - started, std::memory_order_relaxed);
-    }
-    lock.lock();
-  }
-  auto dropped = std::move(tasks_);
-  lock.unlock();
+  for (auto task = nextTask(); task.has_value(); task = nextTask()) runMeasured(*task);
+  std::deque<std::function<void()>> dropped;
+  std::lock_guard lock(mutex_);
+  dropped.swap(tasks_);
 }
 
 } // namespace rntizen

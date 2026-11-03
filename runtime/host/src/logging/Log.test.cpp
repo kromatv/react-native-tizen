@@ -43,8 +43,8 @@ TEST_CASE("logUncaughtException names the boundary and what the exception says")
 
   try {
     throw std::runtime_error("boom");
-  } catch (...) {
-    logUncaughtException("the main loop");
+  } catch (const std::exception &error) {
+    logUncaughtException("the main loop", error);
   }
   try {
     throw 42;
@@ -57,6 +57,22 @@ TEST_CASE("logUncaughtException names the boundary and what the exception says")
   CHECK(sink->lines[0].first == LogLevel::Error);
   CHECK(sink->lines[0].second == "Uncaught exception on the main loop: boom");
   CHECK(sink->lines[1].second == "Uncaught exception on rn-js, not a std::exception");
+}
+
+TEST_CASE("log hands every level to the sink as it was given") {
+  auto sink = installRecordingSink();
+
+  log(LogLevel::Debug, "d");
+  log(LogLevel::Info, "i");
+  log(LogLevel::Warning, "w");
+  log(LogLevel::Error, "e");
+  setLogSink(nullptr);
+
+  REQUIRE(sink->lines.size() == 4);
+  CHECK(sink->lines[0].first == LogLevel::Debug);
+  CHECK(sink->lines[1].first == LogLevel::Info);
+  CHECK(sink->lines[2].first == LogLevel::Warning);
+  CHECK(sink->lines[3].first == LogLevel::Error);
 }
 
 TEST_CASE("logLevelName names every level") {

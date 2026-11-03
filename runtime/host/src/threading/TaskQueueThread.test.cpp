@@ -123,6 +123,26 @@ TEST_CASE("runWhileParked releases the queue when work throws") {
   CHECK(ranAfter);
 }
 
+TEST_CASE("runWhileParked returns false when the queue quits before it parks") {
+  TaskQueueThread queue("test-park-drop");
+  std::promise<void> gate;
+  auto opened = gate.get_future().share();
+  std::atomic<bool> ran{false};
+  std::atomic<bool> parked{true};
+  queue.runOnQueue([&queue, opened] {
+    opened.wait();
+    queue.quitSynchronous();
+  });
+
+  std::thread caller([&queue, &ran, &parked] { parked = queue.runWhileParked([&ran] { ran = true; }); });
+  std::this_thread::sleep_for(20ms);
+  gate.set_value();
+  caller.join();
+
+  CHECK_FALSE(parked);
+  CHECK_FALSE(ran);
+}
+
 TEST_CASE("runWhileParked returns false without running work once the queue has quit") {
   TaskQueueThread queue("test-park-quit");
   queue.quitSynchronous();
