@@ -75,7 +75,7 @@ ControlLink::~ControlLink() {
 }
 
 bool ControlLink::perfRequested() const {
-  return perfRequested_.load(std::memory_order_relaxed);
+  return perfRequested_.load();
 }
 
 bool ControlLink::isStopping() {
@@ -94,7 +94,7 @@ void ControlLink::run() {
         if (adopted) socket_ = socket;
       }
       if (adopted && sendLine(socket, folly::dynamic::object("type", "control")("version", 1))) serve(socket);
-      perfRequested_.store(false, std::memory_order_relaxed);
+      perfRequested_.store(false);
       {
         std::lock_guard lock(mutex_);
         socket_ = -1;
@@ -125,7 +125,7 @@ void ControlLink::serve(int socket) {
 
 bool ControlLink::answer(int socket, const std::string &line) {
   if (const auto perf = perfRequest(line)) {
-    perfRequested_.store(*perf, std::memory_order_relaxed);
+    perfRequested_.store(*perf);
     return true;
   }
   const auto id = screenshotRequestId(line);

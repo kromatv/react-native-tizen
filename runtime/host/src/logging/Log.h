@@ -19,6 +19,10 @@ class LogSink {
 /// Safe from any thread.
 void log(LogLevel level, std::string_view message);
 
+/// Logs the exception being handled as an error that reached `boundary`, such
+/// as "the main loop". Call it from a catch block.
+void logUncaughtException(std::string_view boundary) noexcept;
+
 /// Replaces the extra sink; `nullptr` removes it.
 void setLogSink(std::shared_ptr<LogSink> sink);
 

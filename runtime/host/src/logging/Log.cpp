@@ -2,6 +2,7 @@
 
 #include <dlog.h>
 
+#include <exception>
 #include <mutex>
 #include <string>
 
@@ -61,6 +62,20 @@ void log(LogLevel level, std::string_view message) {
   if (auto sink = currentSink()) {
     sink->write(level, message);
   }
+}
+
+void logUncaughtException(std::string_view boundary) noexcept {
+  std::string message = "Uncaught exception on ";
+  message += boundary;
+  try {
+    throw;
+  } catch (const std::exception &error) {
+    message += ": ";
+    message += error.what();
+  } catch (...) {
+    message += ", not a std::exception";
+  }
+  log(LogLevel::Error, message);
 }
 
 void setLogSink(std::shared_ptr<LogSink> sink) {
