@@ -7,9 +7,7 @@ const BLOCK_BYTES: Record<string, number> = { sha1: 64, sha256: 64, sha512: 128 
 
 /** A password as PKCS#12 hashes it: UTF-16 big-endian with a two-byte terminator. */
 export function bmpPassword(password: string): Buffer {
-  const bytes = Buffer.alloc((password.length + 1) * 2);
-  for (let i = 0; i < password.length; i++) bytes.writeUInt16BE(password.charCodeAt(i), i * 2);
-  return bytes;
+  return Buffer.concat([Buffer.from(password, 'utf16le').swap16(), Buffer.alloc(2)]);
 }
 
 function repeatTo(source: Buffer, blockBytes: number): Buffer {

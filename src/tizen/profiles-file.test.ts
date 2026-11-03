@@ -1,5 +1,8 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseProfiles, profilesPath } from './profiles-file.ts';
+import { parseProfiles, profilesPath, readProfiles } from './profiles-file.ts';
 
 const PROFILES = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <profiles active="TV" version="3.1">
@@ -54,5 +57,24 @@ describe('parseProfiles', () => {
 describe('profilesPath', () => {
   it('takes TIZEN_SDK_DATA_DIR first', () => {
     expect(profilesPath({ TIZEN_SDK_DATA_DIR: '/data' })).toBe('/data/profile/profiles.xml');
+  });
+});
+
+describe('profilesPath and readProfiles', () => {
+  it("takes the data directory Tizen Studio's sdk.info names", () => {
+    const sdk = mkdtempSync(join(tmpdir(), 'rn-tizen-sdk-'));
+    writeFileSync(
+      join(sdk, 'sdk.info'),
+      'TIZEN_SDK_INSTALLED_PATH=/x\nTIZEN_SDK_DATA_PATH=/data/tizen\n',
+    );
+    try {
+      expect(profilesPath({ TIZEN_SDK_DIR: sdk })).toBe('/data/tizen/profile/profiles.xml');
+    } finally {
+      rmSync(sdk, { recursive: true, force: true });
+    }
+  });
+
+  it('reads no profile where there is no file', () => {
+    expect(readProfiles('/nonexistent/profiles.xml')).toEqual({ active: null, profiles: [] });
   });
 });

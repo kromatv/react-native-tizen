@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { z } from 'zod';
-import { CommandError, run } from '../exec.ts';
+import { CommandError, MissingProgramError, run } from '../exec.ts';
 
 const passwordSchema = z.string().min(1).max(1024);
 const KEYCHAIN_SERVICE = 'certificate-manager';
@@ -8,7 +8,7 @@ const KEYCHAIN_SERVICE = 'certificate-manager';
 async function fromKeychain(account: string): Promise<string | null> {
   try {
     const output = await run(
-      ['security', 'find-generic-password', '-s', KEYCHAIN_SERVICE, '-a', account, '-w'],
+      ['/usr/bin/security', 'find-generic-password', '-s', KEYCHAIN_SERVICE, '-a', account, '-w'],
       {
         quiet: true,
       },
@@ -16,7 +16,7 @@ async function fromKeychain(account: string): Promise<string | null> {
     const parsed = passwordSchema.safeParse(output.replace(/\r?\n$/, ''));
     return parsed.success ? parsed.data : null;
   } catch (error) {
-    if (error instanceof CommandError) return null;
+    if (error instanceof CommandError || error instanceof MissingProgramError) return null;
     throw error;
   }
 }
@@ -26,11 +26,14 @@ async function fromKeychain(account: string): Promise<string | null> {
  * password itself or the path of a `.pwd` file; on macOS that file is never
  * written, and the password is in the login keychain under that path.
  */
-export async function profilePassword(stored: string): Promise<string | null> {
+export async function profilePassword(
+  stored: string,
+  platform: NodeJS.Platform = process.platform,
+): Promise<string | null> {
   if (!stored.endsWith('.pwd')) return stored === '' ? null : stored;
   if (existsSync(stored)) {
     const parsed = passwordSchema.safeParse(readFileSync(stored, 'utf8').trim());
     return parsed.success ? parsed.data : null;
   }
-  return process.platform === 'darwin' ? fromKeychain(stored) : null;
+  return platform === 'darwin' ? fromKeychain(stored) : null;
 }

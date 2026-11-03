@@ -66,3 +66,55 @@ describe('resolveSigning', () => {
     await expect(resolveSigning({}, profiles(''))).rejects.toThrow('No active signing profile');
   });
 });
+
+describe('resolveSigning with files given on the command line', () => {
+  const saved = {
+    author: process.env.RN_TIZEN_AUTHOR_PASSWORD,
+    distributor: process.env.RN_TIZEN_DISTRIBUTOR_PASSWORD,
+  };
+
+  afterEach(() => {
+    process.env.RN_TIZEN_AUTHOR_PASSWORD = saved.author;
+    process.env.RN_TIZEN_DISTRIBUTOR_PASSWORD = saved.distributor;
+    if (saved.author === undefined) delete process.env.RN_TIZEN_AUTHOR_PASSWORD;
+    if (saved.distributor === undefined) delete process.env.RN_TIZEN_DISTRIBUTOR_PASSWORD;
+  });
+
+  function files(): { author: string; distributor: string } {
+    const dir = mkdtempSync(join(tmpdir(), 'rn-tizen-flags-'));
+    dirs.push(dir);
+    writeFileSync(join(dir, 'a.p12'), writePkcs12(author.key, author.chain, 'secret', 'a'));
+    writeFileSync(
+      join(dir, 'd.p12'),
+      writePkcs12(distributor.key, distributor.chain, 'secret', 'd'),
+    );
+    return { author: join(dir, 'a.p12'), distributor: join(dir, 'd.p12') };
+  }
+
+  it('opens both halves with the passwords in the environment, without a profile', async () => {
+    process.env.RN_TIZEN_AUTHOR_PASSWORD = 'secret';
+    process.env.RN_TIZEN_DISTRIBUTOR_PASSWORD = 'secret';
+
+    const resolved = await resolveSigning(files(), '/nonexistent/profiles.xml');
+
+    expect(resolved.name).toBe('the given certificates');
+    expect(resolved.identity.distributors).toHaveLength(1);
+  });
+
+  it('asks for the password it does not have', async () => {
+    delete process.env.RN_TIZEN_AUTHOR_PASSWORD;
+
+    await expect(resolveSigning(files(), '/nonexistent/profiles.xml')).rejects.toThrow(
+      'No password for the author certificate',
+    );
+  });
+
+  it('says which file it could not read', async () => {
+    process.env.RN_TIZEN_AUTHOR_PASSWORD = 'secret';
+    process.env.RN_TIZEN_DISTRIBUTOR_PASSWORD = 'secret';
+
+    await expect(
+      resolveSigning({ author: '/nonexistent/a.p12', distributor: files().distributor }, '/x'),
+    ).rejects.toThrow('Could not read the author certificate /nonexistent/a.p12');
+  });
+});

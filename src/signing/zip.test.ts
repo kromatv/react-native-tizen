@@ -30,3 +30,17 @@ describe('zip', () => {
     expect(zip.includes(deflateRawSync(Buffer.alloc(1000, 1)))).toBe(true);
   });
 });
+
+describe('readZip refusals', () => {
+  function withField(offset: number, value: number): Buffer {
+    const zip = writeZip([{ name: 'a.txt', directory: false, data: Buffer.from('x') }]);
+    const central = zip.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+    zip.writeUInt16LE(value, central + offset);
+    return zip;
+  }
+
+  it('refuses an encrypted entry and a compression method it does not know', () => {
+    expect(() => readZip(withField(8, 1))).toThrow('is encrypted');
+    expect(() => readZip(withField(10, 12))).toThrow('unsupported compression method 12');
+  });
+});

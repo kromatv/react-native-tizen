@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createCipheriv, pbkdf2Sync, randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import * as der from './der.ts';
 import { OID, Pkcs12PasswordError, readPkcs12 } from './pkcs12.ts';
@@ -127,6 +127,64 @@ describe('readPkcs12', () => {
 
     expect(contents.certificates[0]?.raw.equals(signer.chain[0]?.raw ?? Buffer.alloc(0))).toBe(
       true,
+    );
+  });
+});
+
+describe('readPkcs12 with PBES2', () => {
+  it('reads a key encrypted with PBKDF2 and AES-256, as OpenSSL 3 writes it', () => {
+    const password = 'secret';
+    const salt = randomBytes(16);
+    const iv = randomBytes(16);
+    const key = pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 2048, 32, 'sha256');
+    const cipher = createCipheriv('aes-256-cbc', key, iv);
+    const pkcs8 = signer.key.export({ format: 'der', type: 'pkcs8' });
+    const encrypted = Buffer.concat([cipher.update(pkcs8), cipher.final()]);
+    const kdf = der.sequence(
+      der.oid(OID.pbkdf2),
+      der.sequence(
+        der.octets(salt),
+        der.integer(2048),
+        der.sequence(der.oid(OID.hmacSha256), der.nul()),
+      ),
+    );
+    const algorithm = der.sequence(
+      der.oid(OID.pbes2),
+      der.sequence(kdf, der.sequence(der.oid(OID.aes256Cbc), der.octets(iv))),
+    );
+    const keyBag = der.sequence(
+      der.oid(OID.shroudedKeyBag),
+      der.explicit(0, der.sequence(algorithm, der.octets(encrypted))),
+    );
+    const certBag = der.sequence(
+      der.oid(OID.certBag),
+      der.explicit(
+        0,
+        der.sequence(
+          der.oid(OID.x509Certificate),
+          der.explicit(0, der.octets(signer.chain[0]?.raw ?? Buffer.alloc(0))),
+        ),
+      ),
+    );
+    const content = (bags: Buffer) =>
+      der.sequence(der.oid(OID.data), der.explicit(0, der.octets(bags)));
+    const file = der.sequence(
+      der.integer(3),
+      content(der.sequence(content(der.sequence(certBag)), content(der.sequence(keyBag)))),
+    );
+
+    const contents = readPkcs12(file, password);
+
+    expect(contents.certificates[0]?.checkPrivateKey(contents.key)).toBe(true);
+    expect(() => readPkcs12(file, 'guess')).toThrow(Pkcs12PasswordError);
+  });
+
+  it('refuses a file that is not a version 3 PKCS#12, or holds no key', () => {
+    const empty = der.sequence(der.oid(OID.data), der.explicit(0, der.octets(der.sequence())));
+
+    expect(() => readPkcs12(der.sequence(der.integer(2), empty), 'x')).toThrow('not version 3');
+    expect(() => readPkcs12(der.sequence(der.integer(3), empty), 'x')).toThrow(
+      'holds no private key',
     );
   });
 });

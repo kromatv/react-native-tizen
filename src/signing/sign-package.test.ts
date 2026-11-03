@@ -1,8 +1,12 @@
 import { createVerify, X509Certificate } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { signFiles, packageEntries } from './sign-package.ts';
+import { signFiles, packageEntries, signPackage } from './sign-package.ts';
+import { readZip } from './zip-read.ts';
+import { writeZip } from './zip-write.ts';
 import type { SigningKey } from './signature-xml.ts';
-import { readFileSync } from 'node:fs';
 import { FIXTURE_FILES } from './tizen-studio-signing.fixtures.ts';
 
 const TIZEN_AUTHOR_XML = readFileSync(
@@ -88,5 +92,32 @@ describe('packageEntries', () => {
     expect(
       packageEntries(files).map((entry) => (entry.directory ? `${entry.name}/` : entry.name)),
     ).toEqual(['bin/', 'bin/App.dll', 'res/', 'res/a/', 'res/a/b.txt']);
+  });
+});
+
+describe('signPackage', () => {
+  it('rewrites a package file signed, as tizen package does in place', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rn-tizen-sign-'));
+    const file = join(dir, 'app.tpk');
+    const entries = Object.entries(FIXTURE_FILES).map(([name, text]) => ({
+      name,
+      directory: false,
+      data: Buffer.from(text),
+    }));
+    writeFileSync(file, writeZip(entries));
+    try {
+      await signPackage(file, {
+        author: replay(TIZEN_AUTHOR_XML),
+        distributors: [replay(TIZEN_DISTRIBUTOR_XML)],
+      });
+
+      const signed = readZip(readFileSync(file));
+      expect(signed.find((entry) => entry.name === 'signature1.xml')?.data.toString('utf8')).toBe(
+        TIZEN_DISTRIBUTOR_XML,
+      );
+      expect(signed.some((entry) => entry.directory && entry.name === 'res')).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

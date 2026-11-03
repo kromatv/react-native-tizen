@@ -20,7 +20,7 @@ export interface SigningIdentity {
  * author signature, then each distributor's, which covers the author's.
  */
 export function signFiles(files: Map<string, Buffer>, identity: SigningIdentity): void {
-  for (const path of [...files.keys()]) if (isSignatureFile(path)) files.delete(path);
+  for (const path of files.keys()) if (isSignatureFile(path)) files.delete(path);
   const author = signatureXml(signedFiles(files, 'author'), 'author', identity.author);
   files.set(AUTHOR_SIGNATURE, Buffer.from(author, 'utf8'));
   const distributorFiles = signedFiles(files, 'distributor');
