@@ -52,7 +52,9 @@
     "react-native-overrides",
     "docs",
     "README.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "!**/*.tsbuildinfo",
+    "!**/*.fixtures.*"
   ],
   "engines": {
     "node": ">=22.13.0"
