@@ -16,6 +16,9 @@ import { guestScript } from './simulator.ts';
 
 const BUILD_WAIT_LINE = 'Waiting for another simulator build to finish...';
 
+/** Runs a guest script: in the VM, or where the CI already is aarch64 Linux. */
+export type GuestRunner = typeof guestRun;
+
 /**
  * The key of the runtime build `app` runs on: this package's runtime/, the
  * app's react-native, Expo core and native libraries.
@@ -48,6 +51,7 @@ export async function buildSimulatorRuntime(
   task: Task,
   app: AppProject,
   onWait: () => void,
+  runGuest: GuestRunner = guestRun,
 ): Promise<string> {
   const { reactNative, expoModulesCore, expoModulesJsi } = app.packages;
   const key = appRuntimeKey(app);
@@ -72,7 +76,7 @@ export async function buildSimulatorRuntime(
     EXPO_MODULES_JSI_DIR: realpathSync(expoModulesJsi.dir),
     RN_TIZEN_LIBRARIES_FILE: nativeLibraries.file,
   };
-  await guestRun(task, ['bash', guestScript('build')], env, (line) => {
+  await runGuest(task, ['bash', guestScript('build')], env, (line) => {
     if (line === BUILD_WAIT_LINE) {
       task.progress('waiting for another build');
       onWait();
