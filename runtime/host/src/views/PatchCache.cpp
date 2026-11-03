@@ -51,7 +51,7 @@ const NinePatch *PatchCache::find(const PatchKey &key) {
 const NinePatch &PatchCache::insert(PatchKey key, NinePatch patch) {
   if (const auto found = entries_.find(key); found != entries_.end()) erase(found);
   bytes_ += bytesOf(patch);
-  const auto entry = entries_.emplace(std::move(key), Entry{.patch = std::move(patch), .use = {}}).first;
+  const auto entry = entries_.try_emplace(std::move(key), Entry{.patch = std::move(patch), .use = {}}).first;
   uses_.push_front(&entry->first);
   entry->second.use = uses_.begin();
   while (bytes_ > budget_ && uses_.size() > 1) erase(entries_.find(*uses_.back()));

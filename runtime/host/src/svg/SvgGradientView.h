@@ -5,6 +5,7 @@
 
 #include <span>
 #include <string>
+#include <string_view>
 
 namespace rntizen::svg {
 
@@ -20,7 +21,7 @@ class SvgGradientView : public SvgNodeView {
 
  protected:
   void drawContent(Drawing &drawing, const DrawContext &context) const final;
-  void setGradient(const std::string &name, const GradientDefinition &definition);
+  void setGradient(std::string_view name, const GradientDefinition &definition);
 
  private:
   std::string name_;

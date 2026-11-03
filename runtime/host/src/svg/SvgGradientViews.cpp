@@ -77,7 +77,7 @@ void SvgGradientView::drawContent(Drawing &, const DrawContext &) const {
   // A gradient paints only through the shapes that reference it by id.
 }
 
-void SvgGradientView::setGradient(const std::string &name, const GradientDefinition &definition) {
+void SvgGradientView::setGradient(std::string_view name, const GradientDefinition &definition) {
   name_ = name;
   definition_ = definition;
 }
