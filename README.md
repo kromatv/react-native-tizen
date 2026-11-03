@@ -76,7 +76,18 @@ npx rn-tizen package
 npx rn-tizen package --dev
 ```
 
+Publishing to Samsung's store needs a Seller Office partner group, because the
+package carries a native library.
+
 ## Documentation
 
 - [The CLI](docs/cli.md): every command, its options, the `expo.tizen` config,
   and where builds land.
+
+## Licence
+
+MIT. What the runtime and the packages it builds carry from other projects,
+and under which licences, is in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+Not affiliated with or endorsed by Samsung, the Linux Foundation, Meta or Expo.
+Samsung, Tizen, Smart Hub, React Native and Expo are trademarks of their owners.
