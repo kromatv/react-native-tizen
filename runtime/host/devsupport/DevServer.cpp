@@ -25,8 +25,8 @@ std::optional<std::uint16_t> parsePort(std::string_view text) {
 std::string queryValue(std::string_view query, std::string_view name) {
   while (!query.empty()) {
     const auto separator = query.find('&');
-    const auto pair = query.substr(0, separator);
-    if (pair.size() > name.size() && pair.starts_with(name) && pair[name.size()] == '=') {
+    if (const auto pair = query.substr(0, separator);
+        pair.size() > name.size() && pair.starts_with(name) && pair[name.size()] == '=') {
       return std::string(pair.substr(name.size() + 1));
     }
     if (separator == std::string_view::npos) break;
