@@ -48,6 +48,7 @@ Paths: `RN/` is react-native-tvos 0.88.0-0 in `node_modules`, `RA/` its
 | Keys | While a field has the keyboard, every key goes to it before the remote handler: to the input method first, then to the field. A key either uses, down or up, never becomes a remote event | `host/input/KeyboardFocus.*`, `RemoteInput.cpp`, `host/views/TextInputKeys.cpp` |
 | On-screen keyboard | One Ecore IMF context per window, made on the first focus as EFL's entry makes it; focus shows the panel unless `showSoftInputOnFocus` is false; the commit, preedit, delete-surrounding and surrounding callbacks edit the text; the caret's position and place are reported on every change | `host/input/ImeSession.cpp`, `ImeOptions.cpp` |
 | Native alert, error screen | They keep the keys: the field sees none while one shows | `host/ReactHost.cpp` |
+| UTF-8 | A value from JavaScript or the input method is decoded as the WHATWG Encoding Standard's UTF-8 decoder decodes, in its `replacement` mode: one U+FFFD for each maximal invalid subpart, so a truncated sequence never swallows the characters after it; overlong forms, surrogates and anything past U+10FFFF are invalid. Those constraints are Unicode's "Best Practices for Using U+FFFD" ([whatwg-enc], sections 4.1 and 8.1.1) | `host/input/EditBuffer.cpp` |
 
 Keys while a field has the keyboard:
 
@@ -118,3 +119,4 @@ On the TV, from `example/`: `rn-tizen run --entry src/screens/text-input/main.ts
 |----|--------|
 | aosp | Android at `android-15.0.0_r1`, `frameworks/base`: `core/java/android/widget/TextView.java`, `widget/Editor.java`, `text/SpannableStringBuilder.java`, `text/InputFilter.java`, `text/method/PasswordTransformationMethod.java`, `core/res/res/values/styles.xml`, `core/res/res/drawable/text_cursor_material.xml`: https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1 |
 | sam-ime | Samsung, Keyboard/IME (web): https://developer.samsung.com/smarttv/develop/guides/user-interaction/keyboardime.html |
+| whatwg-enc | WHATWG, Encoding Standard, Living Standard updated 19 October 2026: the UTF-8 decoder, https://encoding.spec.whatwg.org/#utf-8-decoder, and an error in `replacement` mode, https://encoding.spec.whatwg.org/#concept-encoding-process |
