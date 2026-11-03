@@ -8,7 +8,7 @@
     "newArchEnabled": true,
     "plugins": [
       [
-        "../app.plugin.js",
+        "../src/config/config-plugin.ts",
         {
           "package": "org.rntizen.example",
           "label": "RN Tizen Example",

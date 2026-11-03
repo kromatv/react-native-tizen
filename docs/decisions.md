@@ -289,7 +289,10 @@ Consequence: Expo kills a command after ten seconds, so each one starts a
 detached job and returns at once. Expo has no `run:tizen`, no Tizen key and no
 Tizen in `prebuild` or `export`, so `rn-tizen` keeps its own commands, and an
 app adds a `"tizen": "rn-tizen run"` script beside Expo's. `expo.tizen` is read
-for one more release, with a deprecation.
+for one more release, with a deprecation. A config plugin cannot add a platform
+to Metro, so `withTizen` still wraps the app's Metro config, but nobody writes
+it by hand: `npx rn-tizen init` writes `metro.config.mjs` and the plugin's
+props, and every build checks the Metro config before anything else.
 
 ## The package ships JavaScript, and the CLI runs on Node
 
