@@ -50,6 +50,7 @@ TEST_CASE("parseVoiceCommand reads subtitles and a title selection") {
 
 TEST_CASE("parseVoiceCommand drops what is not a command") {
   CHECK_FALSE(parseVoiceCommand("not json").has_value());
+  CHECK_FALSE(parseVoiceCommand(R"({"type":"skip","seconds":99999999999999999999})").has_value());
   CHECK_FALSE(parseVoiceCommand("[]").has_value());
   CHECK_FALSE(parseVoiceCommand(R"({"type":"dance"})").has_value());
   CHECK_FALSE(parseVoiceCommand(R"({"type":"seek"})").has_value());

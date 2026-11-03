@@ -33,9 +33,11 @@ double number(const folly::dynamic &object, const char *name) {
 
 int integer(const folly::dynamic &object, const char *name) {
   const auto value = number(object, name);
-  const bool fits =
-      std::isfinite(value) && value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max();
-  if (!fits) throw std::invalid_argument(std::string("`") + name + "` must be a finite number within int's range");
+  if (const bool fits =
+          std::isfinite(value) && value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max();
+      !fits) {
+    throw std::invalid_argument(std::string("`") + name + "` must be a finite number within int's range");
+  }
   return static_cast<int>(value);
 }
 
@@ -99,7 +101,9 @@ std::optional<VoiceCommand> parseVoiceCommand(const std::string &json) {
     return read(folly::parseJson(json));
   } catch (const std::invalid_argument &error) {
     return dropped(error.what());
-  } catch (const std::runtime_error &error) {
+  } catch (const folly::json::parse_error &error) {
+    return dropped(error.what());
+  } catch (const std::range_error &error) {
     return dropped(error.what());
   }
 }
