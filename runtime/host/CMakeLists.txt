@@ -58,5 +58,6 @@ if(RN_TIZEN_TESTS)
   rn_tizen_add_host_tests(rn-tizen-host-tests
     SOURCES ${_host_test_sources}
     HOST rn_tizen_host
-    ROOTS ${_react_native_roots})
+    ROOTS ${_react_native_roots}
+    TIZEN_LIBRARIES ${_tizen_libraries})
 endif()

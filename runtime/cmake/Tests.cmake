@@ -2,7 +2,8 @@
 # they test, in one executable that ctest runs. They run where they are built,
 # so only a simulator build has them.
 #
-#   rn_tizen_add_host_tests(<target> SOURCES <test sources> HOST <object library> ROOTS <libraries>)
+#   rn_tizen_add_host_tests(<target> SOURCES <test sources> HOST <object library>
+#     ROOTS <React Native libraries> TIZEN_LIBRARIES <Tizen native API libraries>)
 
 if(NOT RN_TIZEN_SIMULATOR)
   message(FATAL_ERROR "RN_TIZEN_TESTS needs RN_TIZEN_SIMULATOR: the tests run on the machine that builds them.")
@@ -20,7 +21,7 @@ FetchContent_MakeAvailable(doctest)
 enable_testing()
 
 function(rn_tizen_add_host_tests target)
-  cmake_parse_arguments(PARSE_ARGV 1 _tests "" "HOST" "SOURCES;ROOTS")
+  cmake_parse_arguments(PARSE_ARGV 1 _tests "" "HOST" "SOURCES;ROOTS;TIZEN_LIBRARIES")
 
   set(_host_archive ${_tests_HOST}_archive)
   add_library(${_host_archive} STATIC EXCLUDE_FROM_ALL $<TARGET_OBJECTS:${_tests_HOST}>)
@@ -32,6 +33,7 @@ function(rn_tizen_add_host_tests target)
 
   add_executable(${target} EXCLUDE_FROM_ALL ${_tests_SOURCES})
   target_link_libraries(${target} PRIVATE ${_host_archive} ${_react_native_archive} doctest::doctest_with_main)
+  target_link_tizen_libraries(${target} ${_tests_TIZEN_LIBRARIES})
   target_compile_reactnative_options(${target} PRIVATE)
   target_compile_options(${target} PRIVATE -Wno-error)
   target_link_options(${target} PRIVATE "-Wl,--gc-sections")
