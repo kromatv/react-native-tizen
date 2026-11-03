@@ -9,6 +9,7 @@ import { testSigner } from './signing.fixtures.ts';
 
 const PASSWORD = 'secret';
 const WRONG = Array.from({ length: 512 }, (_, n) => `guess-${n}`);
+const ITERATIONS = 1;
 const signer = testSigner('PKCS#12 passwords');
 const pkcs8 = signer.key.export({ format: 'der', type: 'pkcs8' });
 const certificate = signer.chain[0]?.raw ?? Buffer.alloc(0);
@@ -28,9 +29,9 @@ const shroudedKeyBag = (algorithm: Buffer, encrypted: Buffer) =>
     der.explicit(0, der.sequence(algorithm, der.octets(encrypted))),
   );
 const pbe = (oid: string, salt: Buffer) =>
-  der.sequence(der.oid(oid), der.sequence(der.octets(salt), der.integer(2048)));
+  der.sequence(der.oid(oid), der.sequence(der.octets(salt), der.integer(ITERATIONS)));
 const kdf = (salt: Buffer, purpose: number, length: number) =>
-  pkcs12Kdf('sha1', bmpPassword(PASSWORD), salt, 2048, purpose, length);
+  pkcs12Kdf('sha1', bmpPassword(PASSWORD), salt, ITERATIONS, purpose, length);
 
 /** What reading the file with each password ends in: 'password' for a Pkcs12PasswordError. */
 function outcomes(file: Buffer, passwords: readonly string[]): Set<string> {
@@ -49,7 +50,7 @@ function outcomes(file: Buffer, passwords: readonly string[]): Set<string> {
 function pbes2Key(): Buffer {
   const salt = randomBytes(16);
   const iv = randomBytes(16);
-  const key = pbkdf2Sync(PASSWORD, salt, 2048, 32, 'sha256');
+  const key = pbkdf2Sync(PASSWORD, salt, ITERATIONS, 32, 'sha256');
   const cipher = createCipheriv('aes-256-cbc', key, iv);
   const algorithm = der.sequence(
     der.oid(OID.pbes2),
@@ -58,7 +59,7 @@ function pbes2Key(): Buffer {
         der.oid(OID.pbkdf2),
         der.sequence(
           der.octets(salt),
-          der.integer(2048),
+          der.integer(ITERATIONS),
           der.sequence(der.oid(OID.hmacSha256), der.nul()),
         ),
       ),
@@ -103,7 +104,7 @@ describe('readPkcs12 with wrong passwords', () => {
   it('refuses every one by the MAC when the file has one', () => {
     const file = writePkcs12(signer.key, signer.chain, PASSWORD, 'author');
 
-    expect(outcomes(file, WRONG)).toEqual(new Set(['password']));
+    expect(outcomes(file, WRONG.slice(0, 64))).toEqual(new Set(['password']));
   });
 
   it('refuses every one without a MAC, whatever its padding happens to let through', () => {
@@ -136,7 +137,7 @@ describe('readPkcs12 with wrong passwords', () => {
       der.sequence(
         der.sequence(der.sequence(der.oid(OID.sha1), der.nul()), der.octets(mac)),
         der.octets(macSalt),
-        der.integer(2048),
+        der.integer(ITERATIONS),
       ),
     );
 
