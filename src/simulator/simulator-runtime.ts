@@ -5,7 +5,9 @@ import { cacheDir } from '../cache-dir.ts';
 import { bundledImplementations } from '../libraries/bundled-implementations.ts';
 import { findNativeLibraries } from '../libraries/find-native-libraries.ts';
 import { prepareNativeLibraries } from '../libraries/prepare-native-libraries.ts';
+import { RUNTIME_DIR } from '../package-paths.ts';
 import { ensureCodegen } from '../runtime/build-runtime.ts';
+import { sourcesKey } from '../runtime/cmake.ts';
 import { ninjaProgress } from '../runtime/ninja-progress.ts';
 import type { Task } from '../task.ts';
 import { guestRun } from './lima.ts';
@@ -14,7 +16,10 @@ import { guestScript } from './simulator.ts';
 
 const BUILD_WAIT_LINE = 'Waiting for another simulator build to finish...';
 
-/** The key of the runtime build `app` runs on: its react-native, Expo core and native libraries. */
+/**
+ * The key of the runtime build `app` runs on: this package's runtime/, the
+ * app's react-native, Expo core and native libraries.
+ */
 export function appRuntimeKey(app: AppProject): string {
   const { reactNative, expoModulesCore, expoModulesJsi } = app.packages;
   const bundled = bundledImplementations();
@@ -24,7 +29,8 @@ export function appRuntimeKey(app: AppProject): string {
     dir: realpathSync(library.dir),
     implementation: library.declaredTizenCMake ?? bundled.get(library.name) ?? null,
   }));
-  const packages = [reactNative, expoModulesCore, expoModulesJsi].map((pkg) => ({
+  const runtime = { name: 'runtime', version: '', dir: RUNTIME_DIR };
+  const packages = [runtime, reactNative, expoModulesCore, expoModulesJsi].map((pkg) => ({
     ...pkg,
     dir: realpathSync(pkg.dir),
   }));
@@ -45,7 +51,9 @@ export async function buildSimulatorRuntime(
 ): Promise<string> {
   const { reactNative, expoModulesCore, expoModulesJsi } = app.packages;
   const key = appRuntimeKey(app);
-  const root = join(cacheDir(), 'runtime', `${reactNative.name}-${reactNative.version}-simulator`);
+  const sources = sourcesKey(RUNTIME_DIR, reactNative.dir);
+  const name = `${reactNative.name}-${reactNative.version}-simulator-${sources}`;
+  const root = join(cacheDir(), 'runtime', name);
   const codegen = join(root, 'codegen');
   task.progress('codegen');
   await ensureCodegen(reactNative, codegen);

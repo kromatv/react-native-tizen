@@ -16,6 +16,7 @@ export interface MountParams {
 const instanceSchema = z.object({
   status: z.string(),
   param: z.record(z.string(), z.string()).optional(),
+  config: z.object({ mounts: z.array(z.object({ location: z.string() })).optional() }).optional(),
 });
 
 /** What `limactl list` reports about the simulator's VM. */
@@ -126,6 +127,19 @@ export async function editInstance(task: Task, params: MountParams): Promise<voi
     '--tty=false',
     '--set',
     paramExpression(params),
+    LIMA_INSTANCE,
+  ]);
+}
+
+/** Adds a read-only mount of `location` to a stopped VM, at the same path, beside its others. */
+export async function addMount(task: Task, location: string): Promise<void> {
+  const mount = JSON.stringify({ location, writable: false });
+  await task.run([
+    'limactl',
+    'edit',
+    '--tty=false',
+    '--set',
+    `.mounts += [${mount}]`,
     LIMA_INSTANCE,
   ]);
 }

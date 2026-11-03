@@ -33,3 +33,9 @@ export function requireNarrowMount(root: string, home: string): void {
     'Keep the app, its node_modules and react-native-tizen in one project directory inside your home directory.',
   );
 }
+
+/** True when `dir` is `mount` or inside it. */
+export function isWithin(dir: string, mount: string): boolean {
+  if (dir === mount || mount === sep) return true;
+  return dir.startsWith(mount.endsWith(sep) ? mount : `${mount}${sep}`);
+}

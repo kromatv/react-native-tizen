@@ -126,16 +126,20 @@ libraries. It refuses one that is `/`, your home directory or a directory
 above it: keep the app and its `node_modules` in one project directory.
 
 What instances share: the VM, its mounts, and the runtime build of each set of
-native libraries. Running from a checkout the VM does not mount (another clone,
-another worktree) restarts the VM and stops every instance in it.
+native libraries. A project no mount holds yet (another clone, another
+worktree, an app with the package installed) gets its own mount beside the
+others, which restarts the VM once and stops every instance in it; from then
+on every project mounted runs without a restart. `limactl edit rn-tizen-sim`
+removes a mount you no longer need.
 
 ## Runtime builds
 
 The runtime compiles the app's native libraries in (`react-native-svg`, an
 Expo module, the app's own modules), so the VM keeps one build per set of
 them, under `~/rn-tizen-simulator/build/runtimes/<key>`. The key is the first
-12 hex digits of a SHA-256 over the app's react-native, expo-modules-core and
-expo-modules-jsi (name, version, real path) and each native library (name,
+12 hex digits of a SHA-256 over this package's `runtime/` (real path), the
+app's react-native, expo-modules-core and expo-modules-jsi (name, version,
+real path) and each native library (name,
 version, real path, the Tizen implementation compiled for it). Two apps with
 the same libraries share a build; an app with one more library gets its own and
 keeps it warm, so running one app after the other rebuilds neither.
@@ -230,7 +234,3 @@ build it runs in `runtime`.
 - **aarch64, not armv7l.** 64-bit pointers and ARMv8 atomics: a bug that only
   shows on a 32-bit TV does not reproduce here. The runtime links Ubuntu's
   shared libstdc++ and newer glibc, where a TV build carries its own libstdc++.
-- **One `runtime/` per VM.** Builds separate native libraries, not this
-  package's own sources: every build compiles the checkout the VM mounts, so
-  two checkouts with different `runtime/` changes need two VMs, which the
-  simulator does not make.

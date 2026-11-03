@@ -8,17 +8,19 @@ import { findNativeLibraries } from '../libraries/find-native-libraries.ts';
 import { PACKAGE_ROOT } from '../package-paths.ts';
 import type { Task } from '../task.ts';
 import {
+  addMount,
   createInstance,
   editInstance,
   guestRun,
   guestSpawn,
   instanceState,
+  type InstanceState,
   type MountParams,
   startInstance,
   stopInstance,
 } from './lima.ts';
 import { instanceEnv, type SimulatorInstance } from './instance.ts';
-import { mountRoot, requireNarrowMount } from './mount-root.ts';
+import { isWithin, mountRoot, requireNarrowMount } from './mount-root.ts';
 
 /** The VM definition, guest scripts, shims, launcher and viewer. */
 export const SIMULATOR_DIR = fileURLToPath(new URL('../../simulator', import.meta.url));
@@ -64,10 +66,26 @@ export async function provisionVm(task: Task): Promise<void> {
   await guestRun(task, ['sudo', 'bash', guestScript('provision')]);
 }
 
+function mountsProject(state: InstanceState, projectDir: string): boolean {
+  const mounts = state.config?.mounts ?? [];
+  return mounts.some((mount) => isWithin(projectDir, mount.location));
+}
+
+async function remount(task: Task, state: InstanceState, params: MountParams): Promise<void> {
+  if (state.status === 'Running') await stopInstance(task);
+  if (state.param?.CacheDir !== params.CacheDir) {
+    const projectDir = state.param?.ProjectDir ?? params.ProjectDir;
+    await editInstance(task, { ProjectDir: projectDir, CacheDir: params.CacheDir });
+  }
+  if (!mountsProject(state, params.ProjectDir)) await addMount(task, params.ProjectDir);
+}
+
 /**
  * Makes the VM exist, mount what `app` builds from, run, and hold the packages
  * guest/provision.sh lists. Creating it downloads Ubuntu and installs them,
- * which takes a few minutes once.
+ * which takes a few minutes once. A project no mount holds yet, such as
+ * another checkout, gets a mount of its own beside the others, so the projects
+ * mounted before keep theirs; adding it restarts the VM once.
  */
 export async function ensureVm(task: Task, app: AppProject): Promise<VmPreparation> {
   const params = simulatorMounts(app);
@@ -82,11 +100,10 @@ export async function ensureVm(task: Task, app: AppProject): Promise<VmPreparati
     return 'created';
   }
   const mounted =
-    state.param?.ProjectDir === params.ProjectDir && state.param.CacheDir === params.CacheDir;
+    mountsProject(state, params.ProjectDir) && state.param?.CacheDir === params.CacheDir;
   const running = mounted && state.status === 'Running';
   if (!running) {
-    if (!mounted && state.status === 'Running') await stopInstance(task);
-    if (!mounted) await editInstance(task, params);
+    if (!mounted) await remount(task, state, params);
     task.progress('booting');
     await startInstance(task);
   }

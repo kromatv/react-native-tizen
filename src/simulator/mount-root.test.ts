@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FixableError } from '../errors.ts';
-import { mountRoot, requireNarrowMount } from './mount-root.ts';
+import { isWithin, mountRoot, requireNarrowMount } from './mount-root.ts';
 
 describe('mountRoot', () => {
   it('is the repository root for a workspace package and its hoisted react-native', () => {
@@ -51,5 +51,20 @@ describe('requireNarrowMount', () => {
 
   it('lets a directory outside the home directory through', () => {
     expect(() => requireNarrowMount('/opt/apps/tv', '/Users/ada')).not.toThrow();
+  });
+});
+
+describe('isWithin', () => {
+  it('holds the mount itself and what is below it', () => {
+    expect(isWithin('/Users/ada/rnt', '/Users/ada/rnt')).toBe(true);
+    expect(isWithin('/Users/ada/rnt/example', '/Users/ada/rnt')).toBe(true);
+  });
+
+  it('does not hold a sibling whose name starts the same', () => {
+    expect(isWithin('/Users/ada/rnt-other', '/Users/ada/rnt')).toBe(false);
+  });
+
+  it('does not hold a parent', () => {
+    expect(isWithin('/Users/ada', '/Users/ada/rnt')).toBe(false);
   });
 });
