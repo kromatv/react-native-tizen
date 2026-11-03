@@ -30,7 +30,7 @@ WebSocketTransport::WebSocketTransport(const std::string &url, const std::atomic
   curl_easy_setopt(easy, CURLOPT_HTTP_VERSION, static_cast<long>(CURL_HTTP_VERSION_1_1));
   curl_easy_setopt(easy, CURLOPT_HTTPPROXYTUNNEL, 1L);
   curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1L);
-  curl_easy_setopt(easy, CURLOPT_SSLVERSION, static_cast<long>(CURL_SSLVERSION_TLSv1_2));
+  curl_easy_setopt(easy, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
   curl_easy_setopt(easy, CURLOPT_CONNECTTIMEOUT_MS, kConnectTimeoutMs);
   curl_easy_setopt(easy, CURLOPT_NOPROGRESS, 0L);
   curl_easy_setopt(easy, CURLOPT_XFERINFOFUNCTION, abortWhenAsked);

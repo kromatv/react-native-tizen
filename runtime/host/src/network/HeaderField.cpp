@@ -6,12 +6,33 @@ namespace rntizen {
 
 namespace {
 
-constexpr std::string_view kTokenSymbols = "!#$%&'*+-.^_`|~";
+bool isTokenSymbol(char character) {
+  switch (character) {
+    case '!':
+    case '#':
+    case '$':
+    case '%':
+    case '&':
+    case '\'':
+    case '*':
+    case '+':
+    case '-':
+    case '.':
+    case '^':
+    case '_':
+    case '`':
+    case '|':
+    case '~':
+      return true;
+    default:
+      return false;
+  }
+}
 
 bool isTokenCharacter(char character) {
   const auto byte = static_cast<unsigned char>(character);
   const bool alphanumeric = (byte >= '0' && byte <= '9') || (byte >= 'A' && byte <= 'Z') || (byte >= 'a' && byte <= 'z');
-  return alphanumeric || kTokenSymbols.find(character) != std::string_view::npos;
+  return alphanumeric || isTokenSymbol(character);
 }
 
 } // namespace
