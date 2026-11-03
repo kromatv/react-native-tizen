@@ -16,6 +16,16 @@ function listen(onConnection: (socket: WebSocket) => void): Promise<string> {
   });
 }
 
+function closeReason(url: string): Promise<string> {
+  return new Promise((resolve) => {
+    openTvConnection(url, { onMessage: ignore, onClosed: resolve });
+  });
+}
+
+function ignore(): void {
+  return undefined;
+}
+
 afterEach(async () => {
   await Promise.all(
     servers.splice(0).map((server) => {
@@ -39,7 +49,7 @@ describe('openTvConnection', () => {
           connection.send('{"method":"ms.remote.control"}');
           resolve(text);
         },
-        onClosed: () => undefined,
+        onClosed: ignore,
       });
     });
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -52,22 +62,13 @@ describe('openTvConnection', () => {
     const url = await listen((socket) => socket.close(4000, 'refused'));
     const silent = await listen((socket) => socket.close(4001));
 
-    const reasons = await Promise.all(
-      [url, silent].map(
-        (address) =>
-          new Promise<string>((resolve) => {
-            openTvConnection(address, { onMessage: () => undefined, onClosed: resolve });
-          }),
-      ),
-    );
+    const reasons = await Promise.all([url, silent].map(closeReason));
 
     expect(reasons).toEqual(['refused', 'closed with code 4001']);
   });
 
   it('reports a connection that fails', async () => {
-    const reason = await new Promise<string>((resolve) => {
-      openTvConnection('ws://127.0.0.1:1/', { onMessage: () => undefined, onClosed: resolve });
-    });
+    const reason = await closeReason('ws://127.0.0.1:1/');
 
     expect(reason).toMatch(/ECONNREFUSED|closed with code/);
   });
@@ -75,10 +76,7 @@ describe('openTvConnection', () => {
   it('closes on request, with nothing left to send', async () => {
     const url = await listen(() => undefined);
 
-    const connection = openTvConnection(url, {
-      onMessage: () => undefined,
-      onClosed: () => undefined,
-    });
+    const connection = openTvConnection(url, { onMessage: ignore, onClosed: ignore });
     connection.close();
 
     expect(connection.bufferedAmount()).toBe(0);
