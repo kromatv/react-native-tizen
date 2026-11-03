@@ -29,7 +29,7 @@ void paint(NinePatch &patch, Alpha alphaAt) {
 NinePatch makeFilled(const Corners &corners) {
   auto patch = blankPatch(corners.extents());
   const RoundedRect shape{.width = static_cast<float>(patch.width), .height = static_cast<float>(patch.height), .corners = corners};
-  paint(patch, [&](int x, int y) { return shape.coverage(x, y); });
+  paint(patch, [&shape](int x, int y) { return shape.coverage(x, y); });
   return patch;
 }
 
@@ -51,7 +51,7 @@ NinePatch makeRing(const Corners &corners, const Edges &widths) {
       .height = h - static_cast<float>(widths.top + widths.bottom),
       .corners = corners.inset(widths),
   };
-  paint(patch, [&](int x, int y) { return outer.coverage(x, y) - hole.coverage(x, y); });
+  paint(patch, [&outer, &hole](int x, int y) { return outer.coverage(x, y) - hole.coverage(x, y); });
   return patch;
 }
 
@@ -99,13 +99,13 @@ int shadowPadding(int blur) {
 }
 
 const NinePatch &filledPatch(const Corners &corners) {
-  return cachedPatch(patchKey(PatchKind::Filled, corners), [&] { return makeFilled(corners); });
+  return cachedPatch(patchKey(PatchKind::Filled, corners), [&corners] { return makeFilled(corners); });
 }
 
 const NinePatch &ringPatch(const Corners &corners, const Edges &widths) {
   auto key = patchKey(PatchKind::Ring, corners);
   appendEdges(key, widths);
-  return cachedPatch(key, [&] { return makeRing(corners, widths); });
+  return cachedPatch(key, [&corners, &widths] { return makeRing(corners, widths); });
 }
 
 NinePatch makeShadowPatch(const Corners &corners, int blur) {
@@ -129,7 +129,8 @@ NinePatch makeShadowPatch(const Corners &corners, int blur) {
     shape.coverageRow(y, patch.width, alpha.data() + static_cast<std::size_t>(y) * static_cast<std::size_t>(patch.width));
   }
   if (blur > 0) alpha = blurredAlpha(std::move(alpha), patch.width, patch.height, pad, static_cast<float>(blur) / 2);
-  paint(patch, [&](int x, int y) { return alpha[static_cast<std::size_t>(y * patch.width + x)]; });
+  const auto stride = patch.width;
+  paint(patch, [&alpha, stride](int x, int y) { return alpha[static_cast<std::size_t>(y * stride + x)]; });
   return patch;
 }
 

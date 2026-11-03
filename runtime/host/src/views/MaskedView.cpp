@@ -24,7 +24,7 @@ class MaskedView final : public ComponentView {
     evas_object_del(mask_);
   }
 
- protected:
+ private:
   Evas_Object *clipperFor(const ComponentView &child) const override {
     return source_ != nullptr && rootOf(child) != source_ ? mask_ : nullptr;
   }
@@ -35,7 +35,6 @@ class MaskedView final : public ComponentView {
     applyVisibility();
   }
 
- private:
   static void onSourceGeometry(void *data, Evas *, Evas_Object *source, void *) {
     auto *self = static_cast<MaskedView *>(data);
     PixelRect rect;

@@ -173,7 +173,7 @@ NinePatch paint(const facebook::react::BackgroundImage &image, const GradientBox
 } // namespace
 
 const NinePatch &gradientPatch(const facebook::react::BackgroundImage &image, const GradientBox &box) {
-  return cachedPatch(keyFor(image, box), [&] { return paint(image, box); });
+  return cachedPatch(keyFor(image, box), [&image, &box] { return paint(image, box); });
 }
 
 } // namespace rntizen

@@ -22,7 +22,11 @@ class SvgView : public ComponentView {
 
   void updateProps(const facebook::react::Props::Shared &props) override;
 
-  std::shared_ptr<const RedrawRequest> redrawRequest() const;
+  /// Points to this view for exactly as long as it lives, for its nodes to
+  /// keep as a weak pointer.
+  std::shared_ptr<SvgView *const> handle() const;
+  /// Paints again once, on the main loop, after the Fabric transaction under way.
+  void scheduleRedraw() noexcept;
 
  protected:
   void layoutMembers() override;
@@ -43,7 +47,6 @@ class SvgView : public ComponentView {
 
  private:
   static void onRedrawJob(void *data);
-  void scheduleRedraw();
   void redraw();
 
   SvgCanvas canvas_;
@@ -51,7 +54,7 @@ class SvgView : public ComponentView {
   Rgba color_;
   Ecore_Job *job_{nullptr};
   PixelRect painted_;
-  std::shared_ptr<const RedrawRequest> redrawRequest_;
+  std::shared_ptr<SvgView *const> handle_;
 };
 
 } // namespace rntizen::svg

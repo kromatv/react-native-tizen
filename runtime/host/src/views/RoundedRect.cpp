@@ -17,18 +17,19 @@ bool insideCorner(float x, float y, float centerX, float centerY, const CornerRa
 }
 
 Overlap overlap(const RoundedRect &shape, int pixelX, int pixelY) {
+  using enum Overlap;
   const auto left = static_cast<float>(pixelX) - shape.x;
   const auto top = static_cast<float>(pixelY) - shape.y;
   const auto right = left + 1;
   const auto bottom = top + 1;
   const auto w = shape.width;
   const auto h = shape.height;
-  if (right <= 0 || bottom <= 0 || left >= w || top >= h) return Overlap::Outside;
-  if (left < 0 || top < 0 || right > w || bottom > h) return Overlap::Edge;
+  if (right <= 0 || bottom <= 0 || left >= w || top >= h) return Outside;
+  if (left < 0 || top < 0 || right > w || bottom > h) return Edge;
   const auto &[tl, tr, br, bl] = shape.corners;
   const bool cornered = (left < tl.x && top < tl.y) || (right > w - tr.x && top < tr.y) ||
       (right > w - br.x && bottom > h - br.y) || (left < bl.x && bottom > h - bl.y);
-  return cornered ? Overlap::Edge : Overlap::Inside;
+  return cornered ? Edge : Inside;
 }
 
 float sampled(const RoundedRect &shape, int pixelX, int pixelY) {
@@ -60,12 +61,13 @@ bool RoundedRect::contains(float px, float py) const {
 }
 
 float RoundedRect::coverage(int pixelX, int pixelY) const {
+  using enum Overlap;
   switch (overlap(*this, pixelX, pixelY)) {
-    case Overlap::Outside:
+    case Outside:
       return 0;
-    case Overlap::Inside:
+    case Inside:
       return 1;
-    case Overlap::Edge:
+    case Edge:
       break;
   }
   return sampled(*this, pixelX, pixelY);
@@ -99,9 +101,11 @@ void RoundedRect::coverageRow(int pixelY, int count, float *out) const {
 
 float roundedCoverage(const Corners &corners, int width, int height, int x, int y) {
   const auto &[tl, tr, br, bl] = corners;
-  const bool inCorner = (x < tl.x && y < tl.y) || (x + 1 > width - tr.x && y < tr.y) ||
-      (x + 1 > width - br.x && y + 1 > height - br.y) || (x < bl.x && y + 1 > height - bl.y);
-  if (!inCorner) return 1;
+  if (const bool inCorner = (x < tl.x && y < tl.y) || (x + 1 > width - tr.x && y < tr.y) ||
+          (x + 1 > width - br.x && y + 1 > height - br.y) || (x < bl.x && y + 1 > height - bl.y);
+      !inCorner) {
+    return 1;
+  }
   return RoundedRect{.width = static_cast<float>(width), .height = static_cast<float>(height), .corners = corners}.coverage(x, y);
 }
 

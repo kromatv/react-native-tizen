@@ -37,35 +37,36 @@ constexpr std::array<std::pair<std::string_view, double>, 7> kUnitsInUserUnits{{
 }};
 
 void copyAttribute(Paint &to, const Paint &from, PaintAttribute attribute) {
+  using enum PaintAttribute;
   switch (attribute) {
-    case PaintAttribute::Fill:
+    case Fill:
       to.fill = from.fill;
       return;
-    case PaintAttribute::FillOpacity:
+    case FillOpacity:
       to.fillOpacity = from.fillOpacity;
       return;
-    case PaintAttribute::FillRule:
+    case FillRule:
       to.fillRule = from.fillRule;
       return;
-    case PaintAttribute::Stroke:
+    case Stroke:
       to.stroke = from.stroke;
       return;
-    case PaintAttribute::StrokeOpacity:
+    case StrokeOpacity:
       to.strokeOpacity = from.strokeOpacity;
       return;
-    case PaintAttribute::StrokeWidth:
+    case StrokeWidth:
       to.strokeWidth = from.strokeWidth;
       return;
-    case PaintAttribute::StrokeLinecap:
+    case StrokeLinecap:
       to.strokeLinecap = from.strokeLinecap;
       return;
-    case PaintAttribute::StrokeLinejoin:
+    case StrokeLinejoin:
       to.strokeLinejoin = from.strokeLinejoin;
       return;
-    case PaintAttribute::StrokeMiterlimit:
+    case StrokeMiterlimit:
       to.strokeMiterlimit = from.strokeMiterlimit;
       return;
-    case PaintAttribute::Count:
+    case Count:
       return;
   }
 }
@@ -123,22 +124,23 @@ PaintAttributes paintAttributesFromPropList(const std::vector<std::string> &prop
 }
 
 Brush brushFromProp(const folly::dynamic &value) {
-  if (const auto color = rgbaFromNumber(value)) return {.kind = Brush::Kind::Color, .color = *color};
+  using enum Brush::Kind;
+  if (const auto color = rgbaFromNumber(value)) return {.kind = Color, .color = *color};
   if (!value.isObject()) return {};
   const auto *type = value.get_ptr("type");
   if (type == nullptr || !type->isNumber()) return {};
   const auto kind = static_cast<int>(type->asDouble());
-  if (kind == kCurrentColorBrush) return {.kind = Brush::Kind::CurrentColor};
+  if (kind == kCurrentColorBrush) return {.kind = CurrentColor};
   if (kind == kReferenceBrush) {
     const auto *reference = value.get_ptr("brushRef");
     if (reference == nullptr || !reference->isString()) return {};
-    return {.kind = Brush::Kind::Reference, .reference = reference->getString()};
+    return {.kind = Reference, .reference = reference->getString()};
   }
   if (kind != kSolidColorBrush) return {};
   const auto *payload = value.get_ptr("payload");
   const auto color = payload == nullptr ? std::nullopt : rgbaFromNumber(*payload);
   if (!color) return {};
-  return {.kind = Brush::Kind::Color, .color = *color};
+  return {.kind = Color, .color = *color};
 }
 
 std::optional<Length> lengthFromProp(const folly::dynamic &value) {
