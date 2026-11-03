@@ -28,6 +28,8 @@
 
 namespace rntizen {
 
+class DevSupport;
+
 /// One React Native app on a TV: its window, its Hermes runtime on a dedicated
 /// JavaScript thread, its TurboModules and its Fabric surface. Every method runs
 /// on the main thread.
@@ -64,6 +66,14 @@ class ReactHost final {
   void stop();
   void createWindow();
   void createInstance();
+  /// Replaces the React Native instance with a new one on the same window,
+  /// which fetches the bundle again: what `r` in the dev server's terminal and
+  /// `DevSettings.reload()` do.
+  void reload();
+  void startPerfMonitor();
+  void startDevSupport();
+  void devSupportInstanceStarted();
+  void showLogBox(bool shown);
   void loadBundle();
   void routeInput();
   void startSurface();
@@ -104,6 +114,7 @@ class ReactHost final {
   std::unique_ptr<AlertDialog> alertDialog_;
   Diagnostics diagnostics_;
   TvServices tv_;
+  std::shared_ptr<DevSupport> devSupport_;
 };
 
 } // namespace rntizen
