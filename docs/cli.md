@@ -63,6 +63,7 @@ config plugin option `supportsBackgroundPlayback` is read too
 | The generated .NET project | `tizen/` in the app. It ignores itself (`tizen/.gitignore` is `*`), so it never reaches git. Delete it at any time. |
 | The bundle | `tizen/build/bundle/` (`index.tizen.js`, `index.tizen.hbc`, `assets/`) |
 | The signed package | `tizen/bin/Release/<target framework>/<package>-<version>.tpk`, `tizen90` for Tizen 9.0 (TizenFX API 9, not the Tizen version) |
+| Third-party licences | `res/THIRD_PARTY_NOTICES.md` in every package |
 | The native runtime | `~/.cache/react-native-tizen/runtime/<react-native>-<version>-<arch>-tizen<platform>/` |
 | Hermes host compilers | `~/.cache/react-native-tizen/hermes/<version>/` |
 | Linkable sysroots | `~/.cache/react-native-tizen/sysroots/` |
@@ -166,7 +167,11 @@ seconds rather than after a build.
 | `--entry <file>` | The entry to bundle (default: the app's `main`) |
 
 A development build (the default) carries the log endpoint in
-`res/react-native-tizen.json`; a `--release` build carries none.
+`res/react-native-tizen.json`; a `--release` build carries none. Every
+package carries `res/THIRD_PARTY_NOTICES.md`, the licences of what the
+runtime links and the bundle holds
+([`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)); add the notices of
+the native libraries your app adds to your own.
 
 ```sh
 rn-tizen package

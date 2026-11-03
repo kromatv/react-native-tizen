@@ -51,7 +51,8 @@
     "simulator",
     "react-native-overrides",
     "docs",
-    "README.md"
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "engines": {
     "node": ">=22.13.0"

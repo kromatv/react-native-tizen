@@ -14,5 +14,8 @@ export const RUNTIME_DIR = fromPackage('../runtime');
 /** The pinned C++ dependencies, read by CMake and by `rn-tizen`. */
 export const DEPENDENCIES_FILE = fromPackage('../runtime/dependencies.json');
 
+/** The licences of what a package carries, copied into every package's `res/`. */
+export const NOTICES_FILE = fromPackage('../THIRD_PARTY_NOTICES.md');
+
 /** The .NET shell project a Tizen package is generated from. */
 export const SHELL_DIR = fromPackage('../shell');
