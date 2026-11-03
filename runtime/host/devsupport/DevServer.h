@@ -11,6 +11,7 @@ namespace rntizen {
 /// (docs/reference/react-native-dev-tooling.md, section 1).
 struct DevServer {
   std::string scheme;
+  /// As the URL writes it: an IPv6 address keeps its brackets.
   std::string host;
   std::uint16_t port;
   /// The bundle's path without its leading slash: HMRClient.setup's `bundleEntry`.

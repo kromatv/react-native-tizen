@@ -86,7 +86,7 @@ class SurfacePresenter final : public facebook::react::SchedulerDelegate {
   std::shared_ptr<const facebook::react::ContextContainer> contextContainer_;
   std::unique_ptr<facebook::react::Scheduler> scheduler_;
   std::unique_ptr<facebook::react::SurfaceHandler> surface_;
-  std::map<std::string, std::unique_ptr<facebook::react::SurfaceHandler>> overlays_;
+  std::map<std::string, std::unique_ptr<facebook::react::SurfaceHandler>, std::less<>> overlays_;
   facebook::react::SurfaceId lastSurfaceId_;
   bool mountsInline_{false};
   std::shared_ptr<SurfacePresenter *> lifetime_;

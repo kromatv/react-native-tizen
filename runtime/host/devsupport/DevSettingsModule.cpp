@@ -38,11 +38,11 @@ class DevSettingsModule final : public facebook::react::NativeDevSettingsCxxSpec
     DevSupport::post([](DevSupport &devSupport) { devSupport.toggleElementInspector(); });
   }
 
-  void addMenuItem(Runtime &, std::string) {}
+  void addMenuItem(Runtime &, const std::string &) {}
 
   void openDebugger(Runtime &) {}
 
-  void addListener(Runtime &, std::string) {}
+  void addListener(Runtime &, const std::string &) {}
 
   void removeListeners(Runtime &, double) {}
 

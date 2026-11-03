@@ -127,6 +127,41 @@ describe('runInSimulator', () => {
     expect(stageApp).not.toHaveBeenCalled();
   });
 
+  it('stages the dev server URL with --dev-server instead of bundling', async () => {
+    await runInSimulator(
+      reporter,
+      { 'dev-server': true, 'dev-server-port': '8090', 'no-logs': true },
+      context,
+      instance,
+    );
+
+    expect(bundleStep).not.toHaveBeenCalled();
+    const bundle = vi.mocked(stageApp).mock.calls[0]?.[2];
+    expect(bundle).toEqual({
+      url: expect.stringMatching(
+        /^http:\/\/192\.168\.5\.2:8090\/\.expo\/\.virtual-metro-entry\.bundle\?/,
+      ),
+    });
+  });
+
+  it('refuses --dev-server-port without --dev-server', async () => {
+    await expect(
+      runInSimulator(reporter, { 'dev-server-port': '8090', 'no-logs': true }, context, instance),
+    ).rejects.toThrow('--dev-server-port needs --dev-server');
+  });
+
+  it('refuses --bundle with --dev-server', async () => {
+    await expect(
+      runInSimulator(
+        reporter,
+        { bundle: import.meta.filename, 'dev-server': true, 'no-logs': true },
+        context,
+        instance,
+      ),
+    ).rejects.toThrow('pick one');
+    expect(stageApp).not.toHaveBeenCalled();
+  });
+
   it('opens the live screen with --gui', async () => {
     await runInSimulator(reporter, { gui: true, 'no-logs': true }, context, instance);
 

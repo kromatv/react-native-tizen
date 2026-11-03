@@ -14,7 +14,7 @@ namespace {
 using facebook::jsi::Runtime;
 
 std::optional<std::uint32_t> argbColor(std::optional<double> color) {
-  if (!color) return std::nullopt;
+  if (!color.has_value()) return std::nullopt;
   return static_cast<std::uint32_t>(static_cast<std::int64_t>(*color));
 }
 

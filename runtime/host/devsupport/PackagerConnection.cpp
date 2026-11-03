@@ -80,13 +80,13 @@ void PackagerConnection::receive(std::string_view text) {
   folly::dynamic message;
   try {
     message = folly::parseJson(text);
-  } catch (const std::exception &) {
+  } catch (const folly::json::parse_error &) {
     log(LogLevel::Warning, "The dev server sent a message that is not JSON");
     return;
   }
   if (!message.isObject()) return;
-  const auto *version = message.get_ptr("version");
-  if (version == nullptr || !version->isInt() || version->getInt() != kProtocolVersion) {
+  if (const auto *version = message.get_ptr("version");
+      version == nullptr || !version->isInt() || version->getInt() != kProtocolVersion) {
     log(LogLevel::Warning, "The dev server speaks another version of the packager protocol");
     return;
   }

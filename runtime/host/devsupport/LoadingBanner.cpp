@@ -1,8 +1,7 @@
 #include "LoadingBanner.h"
 
-#include <array>
-#include <cstdio>
 #include <cstdlib>
+#include <format>
 
 namespace rntizen {
 
@@ -16,16 +15,8 @@ int channel(std::uint32_t color, int shift) {
 }
 
 std::string hexColor(std::uint32_t argb) {
-  std::array<char, 10> hex{};
-  std::snprintf(
-      hex.data(),
-      hex.size(),
-      "#%02x%02x%02x%02x",
-      channel(argb, 16),
-      channel(argb, 8),
-      channel(argb, 0),
-      channel(argb, 24));
-  return hex.data();
+  return std::format(
+      "#{:02x}{:02x}{:02x}{:02x}", channel(argb, 16), channel(argb, 8), channel(argb, 0), channel(argb, 24));
 }
 
 std::string escaped(const std::string &text) {
@@ -61,8 +52,8 @@ LoadingBanner::~LoadingBanner() {
 }
 
 void LoadingBanner::show(const std::string &message, std::uint32_t textColor, std::uint32_t backgroundColor) {
-  const auto style = "DEFAULT='font=Sans font_size=" + std::to_string(fontSize_) + " color=" + hexColor(textColor) +
-      " align=center wrap=none ellipsis=1.0'";
+  const auto style = std::format(
+      "DEFAULT='font=Sans font_size={} color={} align=center wrap=none ellipsis=1.0'", fontSize_, hexColor(textColor));
   evas_textblock_style_set(style_, style.c_str());
   evas_object_textblock_text_markup_set(text_, escaped(message).c_str());
   const int alpha = channel(backgroundColor, 24);

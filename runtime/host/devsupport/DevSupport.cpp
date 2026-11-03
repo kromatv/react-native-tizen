@@ -14,8 +14,15 @@ constexpr const char *kClientId = "DevSupport";
 constexpr std::uint32_t kLoadTextColor = 0xffffffff;
 constexpr std::uint32_t kLoadBackgroundColor = 0xff404040;
 
-std::mutex currentMutex;
-std::weak_ptr<DevSupport> currentDevSupport;
+struct Current {
+  std::mutex mutex;
+  std::weak_ptr<DevSupport> devSupport;
+};
+
+Current &current() {
+  static Current shared;
+  return shared;
+}
 
 std::string deviceName(const DeviceProfile &device) {
   return device.modelName + " - Tizen " + device.platformVersion;
@@ -30,16 +37,18 @@ std::shared_ptr<DevSupport> DevSupport::start(const std::string &bundleUrl, cons
     return nullptr;
   }
   auto devSupport = std::make_shared<DevSupport>(std::move(*server), device, std::move(host));
-  std::lock_guard lock(currentMutex);
-  currentDevSupport = devSupport;
+  auto &shared = current();
+  std::lock_guard lock(shared.mutex);
+  shared.devSupport = devSupport;
   return devSupport;
 }
 
 void DevSupport::post(std::function<void(DevSupport &)> task) {
   std::weak_ptr<DevSupport> weak;
   {
-    std::lock_guard lock(currentMutex);
-    weak = currentDevSupport;
+    auto &shared = current();
+    std::lock_guard lock(shared.mutex);
+    weak = shared.devSupport;
   }
   runOnMainThread([weak = std::move(weak), task = std::move(task)] {
     if (auto devSupport = weak.lock()) task(*devSupport);
