@@ -3,7 +3,11 @@ import { createHash } from 'node:crypto';
 /** What a PKCS#12 key derivation is for: RFC 7292 appendix B.3's ID byte. */
 export const KDF_PURPOSE = { key: 1, iv: 2, mac: 3 } as const;
 
-const BLOCK_BYTES: Record<string, number> = { sha1: 64, sha256: 64, sha512: 128 };
+const BLOCK_BYTES: Record<'sha1' | 'sha256' | 'sha512', number> = {
+  sha1: 64,
+  sha256: 64,
+  sha512: 128,
+};
 
 /** A password as PKCS#12 hashes it: UTF-16 big-endian with a two-byte terminator. */
 export function bmpPassword(password: string): Buffer {
@@ -14,7 +18,7 @@ function repeatTo(source: Buffer, blockBytes: number): Buffer {
   if (source.length === 0) return source;
   const length = Math.ceil(source.length / blockBytes) * blockBytes;
   const out = Buffer.alloc(length);
-  for (let i = 0; i < length; i++) out[i] = source[i % source.length] ?? 0;
+  for (let i = 0; i < length; i++) out[i] = source.readUInt8(i % source.length);
   return out;
 }
 
@@ -27,7 +31,7 @@ export function pkcs12Kdf(
   purpose: number,
   length: number,
 ): Buffer {
-  const v = BLOCK_BYTES[hash] ?? 64;
+  const v = BLOCK_BYTES[hash];
   const diversifier = Buffer.alloc(v, purpose);
   const input = Buffer.concat([repeatTo(salt, v), repeatTo(password, v)]);
   const output: Buffer[] = [];
@@ -41,7 +45,7 @@ export function pkcs12Kdf(
     for (let block = 0; block < input.length; block += v) {
       let carry = 1;
       for (let i = v - 1; i >= 0; i--) {
-        const sum = (input[block + i] ?? 0) + (b[i] ?? 0) + carry;
+        const sum = input.readUInt8(block + i) + b.readUInt8(i) + carry;
         input[block + i] = sum & 0xff;
         carry = sum >> 8;
       }

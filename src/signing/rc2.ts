@@ -11,50 +11,58 @@ const PITABLE = Buffer.from(
 );
 
 const BLOCK_BYTES = 8;
-const ROTATIONS = [1, 2, 3, 5] as const;
+const ROTATIONS = Buffer.from([1, 2, 3, 5]);
 
-/** RFC 2268's key expansion: the 64 16-bit words every round draws on. */
-export function expandKey(key: Buffer, effectiveBits: number): Uint16Array {
+const pi = (index: number) => PITABLE.readUInt8(index & 0xff);
+
+/** RFC 2268's key expansion: the 64 16-bit little-endian words every round draws on. */
+export function expandKey(key: Buffer, effectiveBits: number): Buffer {
   const expanded = Buffer.alloc(128);
   key.copy(expanded);
   for (let i = key.length; i < 128; i++) {
-    expanded[i] = PITABLE[((expanded[i - 1] ?? 0) + (expanded[i - key.length] ?? 0)) & 0xff] ?? 0;
+    expanded[i] = pi(expanded.readUInt8(i - 1) + expanded.readUInt8(i - key.length));
   }
   const effectiveBytes = (effectiveBits + 7) >> 3;
   const mask = 0xff >> (8 * effectiveBytes - effectiveBits);
   const first = 128 - effectiveBytes;
-  expanded[first] = PITABLE[(expanded[first] ?? 0) & mask] ?? 0;
+  expanded[first] = pi(expanded.readUInt8(first) & mask);
   for (let i = first - 1; i >= 0; i--) {
-    expanded[i] = PITABLE[(expanded[i + 1] ?? 0) ^ (expanded[i + effectiveBytes] ?? 0)] ?? 0;
+    expanded[i] = pi(expanded.readUInt8(i + 1) ^ expanded.readUInt8(i + effectiveBytes));
   }
-  const words = new Uint16Array(64);
-  for (let i = 0; i < 64; i++) words[i] = expanded.readUInt16LE(i * 2);
-  return words;
+  return expanded;
 }
 
-function decryptBlock(block: Buffer, keys: Uint16Array): Buffer {
-  const r = new Uint16Array([0, 1, 2, 3].map((i) => block.readUInt16LE(i * 2)));
-  const word = (i: number) => r[(i + 4) % 4] ?? 0;
+/** The four 16-bit words of a block, indexed modulo 4 as RFC 2268's R[i-1] needs. */
+export function blockWords(block: Buffer) {
+  const r = Buffer.from(block);
+  return {
+    get: (i: number) => r.readUInt16LE(((i + 4) % 4) * 2),
+    set: (i: number, value: number) => r.writeUInt16LE(value & 0xffff, i * 2),
+    bytes: r,
+  };
+}
+
+function decryptBlock(block: Buffer, keys: Buffer): Buffer {
+  const { get: word, set, bytes } = blockWords(block);
+  const key = (k: number) => keys.readUInt16LE(k * 2);
   let j = 63;
   const mixRound = () => {
     for (let i = 3; i >= 0; i--) {
-      const shift = ROTATIONS[i] ?? 0;
+      const shift = ROTATIONS.readUInt8(i);
       const rotated = ((word(i) >>> shift) | (word(i) << (16 - shift))) & 0xffff;
-      r[i] = rotated - (keys[j] ?? 0) - (word(i - 1) & word(i - 2)) - (~word(i - 1) & word(i - 3));
+      set(i, rotated - key(j) - (word(i - 1) & word(i - 2)) - (~word(i - 1) & word(i - 3)));
       j -= 1;
     }
   };
   const mashRound = () => {
-    for (let i = 3; i >= 0; i--) r[i] = word(i) - (keys[word(i - 1) & 63] ?? 0);
+    for (let i = 3; i >= 0; i--) set(i, word(i) - key(word(i - 1) & 63));
   };
   for (let round = 0; round < 5; round++) mixRound();
   mashRound();
   for (let round = 0; round < 6; round++) mixRound();
   mashRound();
   for (let round = 0; round < 5; round++) mixRound();
-  const plain = Buffer.alloc(BLOCK_BYTES);
-  r.forEach((value, i) => plain.writeUInt16LE(value, i * 2));
-  return plain;
+  return bytes;
 }
 
 /** RC2 (RFC 2268) on one 8-byte block, the raw cipher the CBC mode below chains. */
@@ -81,10 +89,11 @@ export function rc2CbcDecrypt(
   for (let at = 0; at < data.length; at += BLOCK_BYTES) {
     const block = data.subarray(at, at + BLOCK_BYTES);
     const decrypted = decryptBlock(block, keys);
-    for (let i = 0; i < BLOCK_BYTES; i++) plain[at + i] = (decrypted[i] ?? 0) ^ (previous[i] ?? 0);
+    for (let i = 0; i < BLOCK_BYTES; i++)
+      plain[at + i] = decrypted.readUInt8(i) ^ previous.readUInt8(i);
     previous = block;
   }
-  const padding = plain.at(-1) ?? 0;
+  const padding = plain.readUInt8(plain.length - 1);
   if (
     padding < 1 ||
     padding > BLOCK_BYTES ||

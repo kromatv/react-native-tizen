@@ -56,7 +56,7 @@ export function integer(value: Buffer | number): Buffer {
   let start = 0;
   while (start < raw.length - 1 && raw[start] === 0) start++;
   const bytes = raw.length === 0 ? Buffer.from([0]) : raw.subarray(start);
-  const negative = ((bytes[0] ?? 0) & 0x80) !== 0;
+  const negative = (bytes.readUInt8(0) & 0x80) !== 0;
   return encode(TAG.integer, negative ? Buffer.concat([Buffer.from([0]), bytes]) : bytes);
 }
 
@@ -75,8 +75,9 @@ function base128(value: number): number[] {
 }
 
 export function oid(dotted: string): Buffer {
-  const [first = 0, second = 0, ...rest] = dotted.split('.').map(Number);
-  return encode(TAG.oid, Buffer.from([first * 40 + second, ...rest.flatMap(base128)]));
+  const arcs = dotted.split('.').map(Number);
+  const head = arcs.slice(0, 2).reduce((total, arc) => total * 40 + arc, 0);
+  return encode(TAG.oid, Buffer.from([head, ...arcs.slice(2).flatMap(base128)]));
 }
 
 /** `YYMMDDhhmmssZ`, how X.509 writes a date before 2050. */

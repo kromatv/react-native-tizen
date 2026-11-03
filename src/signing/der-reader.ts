@@ -16,8 +16,8 @@ function readAt(buffer: Buffer, offset: number): { node: DerNode; end: number } 
   if (first & 0x80) {
     const count = first & 0x7f;
     if (count === 0 || count > 4) throw new Error('DER: an unsupported length');
-    length = 0;
-    for (let i = 0; i < count; i++) length = length * 256 + (buffer[offset + 2 + i] ?? 0);
+    if (offset + 2 + count > buffer.length) throw new Error('DER: the data ends mid-value');
+    length = buffer.readUIntBE(offset + 2, count);
     header += count;
   }
   const end = offset + header + length;
@@ -55,7 +55,8 @@ export function sequenceOf(node: DerNode | undefined, what: string): DerNode[] {
 
 export function oidOf(node: DerNode | undefined): string {
   const { contents } = expectTag(node, TAG.oid, 'an object identifier');
-  const [first = 0] = contents;
+  if (contents.length === 0) throw new Error('DER: an empty object identifier');
+  const first = contents.readUInt8(0);
   const parts = [Math.floor(first / 40), first % 40];
   let value = 0;
   for (const byte of contents.subarray(1)) {
@@ -71,7 +72,7 @@ export function oidOf(node: DerNode | undefined): string {
 /** A non-negative INTEGER small enough for a number, such as an iteration count. */
 export function smallIntegerOf(node: DerNode | undefined): number {
   const { contents } = expectTag(node, TAG.integer, 'an integer');
-  if (contents.length > 6 || ((contents[0] ?? 0) & 0x80) !== 0)
+  if (contents.length === 0 || contents.length > 6 || (contents.readUInt8(0) & 0x80) !== 0)
     throw new Error('DER: an integer out of range');
   return contents.reduce((total, byte) => total * 256 + byte, 0);
 }
