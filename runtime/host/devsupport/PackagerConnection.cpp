@@ -1,17 +1,15 @@
 #include "PackagerConnection.h"
 
+#include "PackagerMessage.h"
+
 #include "logging/Log.h"
 #include "threading/MainThread.h"
-
-#include <folly/json.h>
 
 namespace rntizen {
 
 namespace {
 
-constexpr int kProtocolVersion = 2;
 constexpr double kRetrySeconds = 2.0;
-constexpr std::size_t kMaxMessageBytes = 64 * 1024;
 
 } // namespace
 
@@ -76,36 +74,10 @@ Eina_Bool PackagerConnection::retry(void *data) {
 }
 
 void PackagerConnection::receive(std::string_view text) {
-  if (text.size() > kMaxMessageBytes) return;
-  folly::dynamic message;
-  try {
-    message = folly::parseJson(text);
-  } catch (const folly::json::parse_error &) {
-    log(LogLevel::Warning, "The dev server sent a message that is not JSON");
-    return;
-  }
-  if (!message.isObject()) return;
-  if (const auto *version = message.get_ptr("version");
-      version == nullptr || !version->isInt() || version->getInt() != kProtocolVersion) {
-    log(LogLevel::Warning, "The dev server speaks another version of the packager protocol");
-    return;
-  }
-  const auto *method = message.get_ptr("method");
-  const auto *id = message.get_ptr("id");
-  const auto name = method != nullptr && method->isString() ? method->getString() : std::string();
-  if (name == "reload" && handlers_.reload) {
-    handlers_.reload();
-  } else if (name == "devMenu" && handlers_.devMenu) {
-    handlers_.devMenu();
-  } else if (id != nullptr && !id->isNull()) {
-    answerError(*id, name.empty() ? "No method provided" : "No request handler for method: " + name);
-  }
-}
-
-void PackagerConnection::answerError(const folly::dynamic &id, const std::string &error) {
-  if (socket_ == nullptr) return;
-  const folly::dynamic reply = folly::dynamic::object("version", kProtocolVersion)("id", id)("error", error);
-  socket_->send(WebSocketOpcode::Text, folly::toJson(reply));
+  const auto message = readPackagerMessage(text);
+  if (message.command == PackagerCommand::Reload && handlers_.reload) handlers_.reload();
+  if (message.command == PackagerCommand::DevMenu && handlers_.devMenu) handlers_.devMenu();
+  if (message.reply.has_value() && socket_ != nullptr) socket_->send(WebSocketOpcode::Text, *message.reply);
 }
 
 } // namespace rntizen

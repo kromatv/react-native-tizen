@@ -10,6 +10,8 @@ namespace rntizen {
 
 namespace {
 
+constexpr const char *kPlatform = "tizen";
+constexpr const char *kClientId = "DevSupport";
 constexpr std::uint16_t kHttpPort = 80;
 constexpr std::uint16_t kHttpsPort = 443;
 
@@ -68,6 +70,19 @@ std::string DevServer::httpUrl(const std::string &path) const {
 
 std::string DevServer::socketUrl(const std::string &path) const {
   return std::format("{}://{}{}", scheme == "https" ? "wss" : "ws", authority(), path);
+}
+
+std::string DevServer::packagerUrl(const std::string &deviceName) const {
+  return socketUrl(std::format(
+      "/message?device={}&app={}&clientid={}", encodeQueryValue(deviceName), encodeQueryValue(app), kClientId));
+}
+
+folly::dynamic DevServer::hmrClientSetup(bool hotLoadingEnabled) const {
+  return folly::dynamic::array(kPlatform, bundlePath, host, port, hotLoadingEnabled, scheme);
+}
+
+std::string friendlyDeviceName(const DeviceProfile &device) {
+  return std::format("{} - Tizen {}", device.modelName, device.platformVersion);
 }
 
 std::optional<DevServer> devServerOf(const std::string &bundleUrl) {

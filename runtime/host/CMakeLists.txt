@@ -10,6 +10,7 @@ if(TARGET expo_modules_common)
 endif()
 if(RN_TIZEN_DEVELOPMENT)
   file(GLOB_RECURSE _devsupport_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/devsupport/*.cpp")
+  list(FILTER _devsupport_sources EXCLUDE REGEX "\\.test\\.cpp$")
   list(APPEND _host_sources ${_devsupport_sources})
 endif()
 # React Native's cross-platform TextInput props. Its Android props, shadow node
@@ -62,6 +63,10 @@ set_property(TARGET react-native-tizen APPEND PROPERTY LINK_DEPENDS "${CMAKE_CUR
 
 if(RN_TIZEN_TESTS)
   file(GLOB_RECURSE _host_test_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.test.cpp")
+  if(RN_TIZEN_DEVELOPMENT)
+    file(GLOB_RECURSE _devsupport_test_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/devsupport/*.test.cpp")
+    list(APPEND _host_test_sources ${_devsupport_test_sources})
+  endif()
   rn_tizen_add_host_tests(rn-tizen-host-tests
     SOURCES ${_host_test_sources}
     HOST rn_tizen_host

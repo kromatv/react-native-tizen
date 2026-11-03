@@ -3,7 +3,6 @@
 #include "network/WebSocketConnection.h"
 
 #include <Ecore.h>
-#include <folly/dynamic.h>
 
 #include <functional>
 #include <memory>
@@ -34,7 +33,6 @@ class PackagerConnection final {
   void open();
   void retryLater();
   void receive(std::string_view text);
-  void answerError(const folly::dynamic &id, const std::string &error);
   static Eina_Bool retry(void *data);
 
   const std::string url_;

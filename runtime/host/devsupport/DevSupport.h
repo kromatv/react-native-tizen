@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DevServer.h"
+#include "DevSettingsState.h"
 #include "LoadingBanner.h"
 #include "PackagerConnection.h"
 
@@ -72,8 +73,7 @@ class DevSupport final {
   LoadingBanner banner_;
   std::unique_ptr<PackagerConnection> packager_;
   std::shared_ptr<InstanceGate> gate_;
-  bool hotLoadingEnabled_{true};
-  bool logBoxShown_{false};
+  DevSettingsState settings_;
 };
 
 } // namespace rntizen

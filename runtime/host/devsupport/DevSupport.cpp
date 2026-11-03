@@ -9,8 +9,6 @@ namespace rntizen {
 
 namespace {
 
-constexpr const char *kPlatform = "tizen";
-constexpr const char *kClientId = "DevSupport";
 constexpr std::uint32_t kLoadTextColor = 0xffffffff;
 constexpr std::uint32_t kLoadBackgroundColor = 0xff404040;
 
@@ -22,10 +20,6 @@ struct Current {
 Current &current() {
   static Current shared;
   return shared;
-}
-
-std::string deviceName(const DeviceProfile &device) {
-  return device.modelName + " - Tizen " + device.platformVersion;
 }
 
 } // namespace
@@ -50,6 +44,7 @@ void DevSupport::post(std::function<void(DevSupport &)> task) {
     std::lock_guard lock(shared.mutex);
     weak = shared.devSupport;
   }
+  if (weak.expired()) return;
   runOnMainThread([weak = std::move(weak), task = std::move(task)] {
     if (auto devSupport = weak.lock()) task(*devSupport);
   });
@@ -59,10 +54,8 @@ DevSupport::DevSupport(DevServer server, const DeviceProfile &device, Host host)
     : server_(std::move(server)),
       host_(std::move(host)),
       banner_(host_.evas, host_.screenWidth, host_.screenHeight) {
-  const auto query = "?device=" + encodeQueryValue(deviceName(device)) + "&app=" + encodeQueryValue(server_.app) +
-      "&clientid=" + kClientId;
   packager_ = std::make_unique<PackagerConnection>(
-      server_.socketUrl("/message" + query),
+      server_.packagerUrl(friendlyDeviceName(device)),
       PackagerConnection::Handlers{
           .reload = [this] { reload("Reload from the dev server"); },
           .devMenu =
@@ -78,11 +71,9 @@ void DevSupport::instanceStarted(
     std::shared_ptr<InstanceGate> gate,
     const facebook::react::RuntimeExecutor &afterBundle) {
   gate_ = std::move(gate);
-  logBoxShown_ = false;
+  settings_.instanceStarted();
   showMessage("Loading from " + server_.authority() + "…", std::nullopt, std::nullopt);
-  auto setup = folly::dynamic::array(
-      kPlatform, server_.bundlePath, server_.host, server_.port, hotLoadingEnabled_, server_.scheme);
-  gate_->callFunctionOnModule("HMRClient", "setup", std::move(setup));
+  gate_->callFunctionOnModule("HMRClient", "setup", server_.hmrClientSetup(settings_.hotLoadingEnabled()));
   afterBundle([](facebook::jsi::Runtime &) {
     post([](DevSupport &devSupport) { devSupport.hideMessage(); });
   });
@@ -94,9 +85,7 @@ void DevSupport::reload(const std::string &reason) {
 }
 
 void DevSupport::setHotLoadingEnabled(bool enabled) {
-  if (hotLoadingEnabled_ == enabled) return;
-  hotLoadingEnabled_ = enabled;
-  reload(enabled ? "Fast Refresh turned on" : "Fast Refresh turned off");
+  if (settings_.setHotLoadingEnabled(enabled)) reload(enabled ? "Fast Refresh turned on" : "Fast Refresh turned off");
 }
 
 void DevSupport::toggleElementInspector() {
@@ -115,9 +104,7 @@ void DevSupport::hideMessage() {
 }
 
 void DevSupport::setLogBoxShown(bool shown) {
-  if (logBoxShown_ == shown) return;
-  logBoxShown_ = shown;
-  host_.showLogBox(shown);
+  if (settings_.setLogBoxShown(shown)) host_.showLogBox(shown);
 }
 
 void DevSupport::emitDeviceEvent(const std::string &name, folly::dynamic payload) {
