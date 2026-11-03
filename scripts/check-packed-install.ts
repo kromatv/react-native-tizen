@@ -74,7 +74,7 @@ try {
   const packs = join(work, 'pack');
   mkdirSync(packs);
   await sh(['npm', 'pack', '--pack-destination', packs], REPO);
-  const [tarball] = readdirSync(packs).filter((name) => name.endsWith('.tgz'));
+  const tarball = readdirSync(packs).find((name) => name.endsWith('.tgz'));
   if (tarball === undefined) throw new Error('npm pack wrote no tarball');
   const app = join(work, 'app');
   mkdirSync(app);

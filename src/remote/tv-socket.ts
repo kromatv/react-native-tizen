@@ -8,6 +8,11 @@ declare module 'ws' {
 
 const MAX_MESSAGE_BYTES = 64 * 1024;
 
+function messageText(data: WebSocket.RawData): string {
+  const chunks = Array.isArray(data) ? data : [data];
+  return Buffer.concat(chunks.map((chunk) => new Uint8Array(chunk))).toString('utf8');
+}
+
 /** What a remote session hears from its connection. */
 export interface TvConnectionEvents {
   onMessage(text: string): void;
@@ -36,7 +41,7 @@ export const openTvConnection: OpenTvConnection = (url, events) => {
     tls: { rejectUnauthorized: false },
     maxPayload: MAX_MESSAGE_BYTES,
   });
-  socket.on('message', (data: WebSocket.RawData) => events.onMessage(data.toString()));
+  socket.on('message', (data: WebSocket.RawData) => events.onMessage(messageText(data)));
   socket.on('close', (code: number, reason: Buffer) =>
     events.onClosed(reason.length === 0 ? `closed with code ${code}` : reason.toString()),
   );

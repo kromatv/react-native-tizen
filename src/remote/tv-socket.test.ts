@@ -58,6 +58,16 @@ describe('openTvConnection', () => {
     expect(received).toEqual(['{"method":"ms.remote.control"}']);
   });
 
+  it('reads a message the TV sends as a binary frame as text', async () => {
+    const url = await listen((socket) => socket.send(Buffer.from('{"event":"ms.error"}')));
+
+    const message = await new Promise<string>((resolve) => {
+      openTvConnection(url, { onMessage: resolve, onClosed: ignore });
+    });
+
+    expect(message).toBe('{"event":"ms.error"}');
+  });
+
   it('reports the reason the TV closed with, else its code', async () => {
     const url = await listen((socket) => socket.close(4000, 'refused'));
     const silent = await listen((socket) => socket.close(4001));
