@@ -105,7 +105,11 @@ void removeFiles(const std::vector<fs::path> &files) {
 std::vector<fs::path> writeWeightInstances(const fs::path &font, const fs::path &directory) {
   const auto *hb = harfBuzzSubset();
   if (hb == nullptr) return {};
-  const Face source(*hb, font);
+  return writeWeightInstances(*hb, font, directory);
+}
+
+std::vector<fs::path> writeWeightInstances(const HarfBuzzSubset &hb, const fs::path &font, const fs::path &directory) {
+  const Face source(hb, font);
   if (source.face == nullptr) return {};
   const auto axes = axesOf(source);
   const auto weight = weightAxis(axes);
