@@ -7,11 +7,11 @@ import { bundleApp, type AppBundle } from '../bundle/bundle-app.ts';
 import { formatSize } from '../cli/format.ts';
 import { ensureIcuData } from '../runtime/icu-data.ts';
 import type { Reporter } from '../cli/reporter.ts';
+import { devBuildHost, devServerBundleStep } from '../package/dev-server-bundle.ts';
 import { buildDotnetProject } from '../package/dotnet-build.ts';
 import { featureNotes } from '../package/feature-notes.ts';
-import { devServerBundleUrl } from '../package/dev-server.ts';
 import type { LogEndpoint } from '../package/runtime-config.ts';
-import { writeTizenProject, type PackagedBundle } from '../package/tizen-project.ts';
+import { writeTizenProject } from '../package/tizen-project.ts';
 import type { PlatformProfile } from '../tizen/platform-profiles.ts';
 import { signPackage } from '../signing/sign-package.ts';
 import { resolveSigning, type SigningRequest } from '../tizen/signing-identity.ts';
@@ -25,8 +25,9 @@ interface PackageRequest {
   readonly target: TizenTarget;
   readonly shell: PlatformProfile;
   readonly log: LogEndpoint | null;
-  readonly devServer: URL | null;
   readonly signing: SigningRequest;
+  /** The `expo start` origin a development build loads its bundle from. */
+  readonly devServer?: string;
 }
 
 /** Where the bundle of an app is written before it is packaged. */
@@ -64,20 +65,10 @@ function until(date: string): string {
   return new Date(date).toISOString().slice(0, 10);
 }
 
-function bundleOrDevServer(reporter: Reporter, request: PackageRequest): Promise<PackagedBundle> {
-  const { app, devServer } = request;
-  if (devServer === null) return bundleStep(reporter, app);
-  const url = devServerBundleUrl(devServer, app.config.packageId);
-  reporter.field('Dev server', url);
-  return Promise.resolve({ url });
-}
-
 /**
  * Builds a signed `.tpk` from scratch or incrementally: the native runtime, the
- * bytecode bundle (unless the app loads it from a dev server), the generated
- * `tizen/` project, then .NET and signing. A development build gets the
- * development runtime. Fails fast, before any compiling, when there is
- * nothing to sign with.
+ * bytecode bundle, the generated `tizen/` project, then .NET and signing.
+ * Fails fast, before any compiling, when there is nothing to sign with.
  */
 /** A built package and the distributor certificate that signed it. */
 export interface BuiltPackage {
@@ -103,7 +94,12 @@ export async function packageSteps(
   for (const note of featureNotes(app.config.features, request.log === null)) reporter.note(note);
   const flavour = request.log === null ? 'release' : 'development';
   const runtimeLibrary = await runtimeSteps(reporter, sdk, app, target, flavour);
-  const bundle = await bundleOrDevServer(reporter, request);
+  const bundle =
+    request.devServer === undefined
+      ? await bundleStep(reporter, app)
+      : await devServerBundleStep(reporter, app, bundleDir(app), request.devServer, () =>
+          devBuildHost(request.log),
+        );
   const icuData = await icuDataStep(reporter, app);
   const projectDir = await reporter.step(
     'Tizen project',

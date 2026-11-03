@@ -1,7 +1,6 @@
 import { relative, resolve } from 'node:path';
 import { loadAppProject, type AppProject } from '../app/app-project.ts';
 import { entryPath, type CommandContext } from '../cli/command.ts';
-import { chooseDevServer, DEV_SERVER_OPTIONS } from '../cli/dev-server-options.ts';
 import { chooseLogEndpoint, LOG_OPTIONS } from '../cli/log-options.ts';
 import { Reporter } from '../cli/reporter.ts';
 import { chooseTarget, TARGET_OPTIONS } from '../cli/target-options.ts';
@@ -39,7 +38,12 @@ export const BUILD_OPTIONS = {
       "The distributor certificate, instead of the profile's (password in RN_TIZEN_DISTRIBUTOR_PASSWORD)",
   },
   ...LOG_OPTIONS,
-  ...DEV_SERVER_OPTIONS,
+  'dev-server': {
+    type: 'string',
+    placeholder: '<origin>',
+    description:
+      'Load the bundle from this `expo start` dev server, such as http://192.168.1.20:8081, instead of packaging it',
+  },
 } as const;
 
 interface BuildFlags {
@@ -53,8 +57,7 @@ interface BuildFlags {
   readonly dev?: boolean;
   readonly 'log-host'?: string;
   readonly 'log-port'?: string;
-  readonly 'dev-server'?: boolean;
-  readonly 'dev-server-port'?: string;
+  readonly 'dev-server'?: string;
   readonly project?: string;
   readonly entry?: string;
   readonly verbose?: boolean;
@@ -70,8 +73,6 @@ interface PreparedBuild extends BuildBase {
   readonly target: TizenTarget;
   readonly shell: PlatformProfile;
   readonly log: LogEndpoint | null;
-  /** The dev server the app loads its bundle from, or null when the package carries it. */
-  readonly devServer: URL | null;
 }
 
 function describeDevice(device: Device): string {
@@ -79,19 +80,13 @@ function describeDevice(device: Device): string {
   return `${device.name || device.serial}, ${cpuArch}, Tizen ${platformVersion}`;
 }
 
-function describeBuild(log: LogEndpoint | null, devServer: URL | null): string {
-  if (log === null) return 'release';
-  const logs = `development, logs to ${log.host}:${log.port}`;
-  return devServer === null ? logs : `${logs}, bundle from ${devServer.host}`;
-}
-
-/** Reads the app and finds Tizen Studio. */
+/** Reads the app and finds Tizen Studio, warning about settings written the deprecated way. */
 export function openBuild(flags: BuildFlags, context: CommandContext): BuildBase {
-  return {
-    reporter: new Reporter({ verbose: flags.verbose ?? false }),
-    app: loadAppProject(resolve(context.cwd, flags.project ?? '.'), entryPath(flags, context)),
-    sdk: locateTizenSdk(),
-  };
+  const reporter = new Reporter({ verbose: flags.verbose ?? false });
+  const app = loadAppProject(resolve(context.cwd, flags.project ?? '.'), entryPath(flags, context));
+  if (app.config.deprecation !== null)
+    reporter.line(reporter.paint('yellow', app.config.deprecation));
+  return { reporter, app, sdk: locateTizenSdk() };
 }
 
 /** Finds the TV at `address`, or the only one connected, as a step. */
@@ -123,16 +118,13 @@ export function settleBuild(
     port: flags['log-port'],
     deviceHost: device?.address.host ?? null,
   });
-  const devServer = chooseDevServer({
-    command,
-    enabled: flags['dev-server'],
-    port: flags['dev-server-port'],
-    host: log?.host ?? null,
-  });
   const where = relative(cwd, app.root);
   const location = where === '' ? '' : `  ${reporter.paint('gray', where)}`;
   reporter.field('App', `${app.config.packageId} ${app.config.version}${location}`);
   reporter.field('Target', `${target.arch}, Tizen ${target.platformVersion}`);
-  reporter.field('Build', describeBuild(log, devServer));
-  return { ...base, target, shell, log, devServer };
+  reporter.field(
+    'Build',
+    log === null ? 'release' : `development, logs to ${log.host}:${log.port}`,
+  );
+  return { ...base, target, shell, log };
 }

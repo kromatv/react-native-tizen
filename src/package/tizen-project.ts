@@ -19,14 +19,11 @@ import {
   serviceManifestValues,
 } from './templates.ts';
 
-/** What a package carries of the app's JavaScript: its bundle, or the dev server URL to load it from. */
-export type PackagedBundle = AppBundle | { readonly url: string };
-
 interface TizenProjectInputs {
   readonly app: AppProject;
   readonly profile: PlatformProfile;
   readonly runtimeLibrary: string;
-  readonly bundle: PackagedBundle;
+  readonly bundle: AppBundle;
   readonly log: LogEndpoint | null;
   /** The ICU data the runtime reads, `icudt<major>l.dat`. */
   readonly icuData: string;
@@ -42,13 +39,13 @@ function iconPath(app: AppProject): string {
   if (!existsSync(icon)) {
     throw new FixableError(
       `The app icon ${app.config.icon} does not exist`,
-      'Fix expo.icon or expo.tizen.icon in app.json.',
+      'Fix expo.icon, or the icon prop of the @kromatv/react-native-tizen plugin, in app.json.',
     );
   }
   if (extname(icon).toLowerCase() !== '.png') {
     throw new FixableError(
       `The app icon ${app.config.icon} is not a PNG`,
-      'Tizen only takes a PNG icon: point expo.tizen.icon at one.',
+      'Tizen only takes a PNG icon: point the icon prop of the plugin at one.',
     );
   }
   return icon;
@@ -86,24 +83,24 @@ async function writeResources(inputs: TizenProjectInputs, dir: string): Promise<
   const res = join(dir, 'res');
   await rm(res, { recursive: true, force: true });
   await mkdir(res, { recursive: true });
-  const { bundle } = inputs;
-  if ('bytecode' in bundle) {
-    await copyFile(bundle.bytecode, join(res, BYTECODE_FILE));
-    await cp(bundle.assetsDir, join(res, 'assets'), { recursive: true });
-  }
+  await copyFile(inputs.bundle.bytecode, join(res, BYTECODE_FILE));
   await copyFile(inputs.icuData, join(res, basename(inputs.icuData)));
   await copyFile(NOTICES_FILE, join(res, basename(NOTICES_FILE)));
-  const source = 'bytecode' in bundle ? { file: BYTECODE_FILE } : { url: bundle.url };
-  const config = runtimeConfig(source, inputs.log, inputs.app.config);
+  await cp(inputs.bundle.assetsDir, join(res, 'assets'), { recursive: true });
+  const config = runtimeConfig(
+    BYTECODE_FILE,
+    inputs.log,
+    inputs.app.config,
+    inputs.bundle.bundleUrl,
+  );
   await writeFile(join(res, RUNTIME_CONFIG_FILE), `${JSON.stringify(config, null, 2)}\n`);
   await writeAppConfig(inputs.app.root, res);
 }
 
 /**
  * Generates the app's `tizen/` directory, Expo prebuild style: the .NET shell
- * from this package's templates, the native runtime, the bytecode bundle (or
- * the dev server it comes from) and the icon. The directory ignores itself, so
- * it never reaches git.
+ * from this package's templates, the native runtime, the bytecode bundle and
+ * the icon. The directory ignores itself, so it never reaches git.
  */
 export async function writeTizenProject(inputs: TizenProjectInputs): Promise<string> {
   const dir = inputs.app.tizenDir;

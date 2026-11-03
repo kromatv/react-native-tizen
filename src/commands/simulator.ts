@@ -12,7 +12,6 @@ import {
   type OptionSpecs,
 } from '../cli/command.ts';
 import { LEVEL_OPTIONS } from '../cli/log-level-option.ts';
-import { DEFAULT_DEV_SERVER_PORT } from '../package/dev-server.ts';
 import { parsePort } from '../cli/log-options.ts';
 import { Reporter } from '../cli/reporter.ts';
 import { closestMatch } from '../cli/suggest.ts';
@@ -61,17 +60,13 @@ const OPTIONS = {
     placeholder: '<file.hbc>',
     description: 'run: start this Hermes bytecode instead of bundling the app',
   },
-  gui: { type: 'boolean', description: 'run: also open the live screen and remote in the browser' },
   'dev-server': {
-    type: 'boolean',
-    description:
-      'run: load the bundle from `expo start` on this Mac: Fast Refresh, r to reload, LogBox and logs in its terminal',
-  },
-  'dev-server-port': {
     type: 'string',
-    placeholder: '<port>',
-    description: `run: the port \`expo start\` listens on (default: ${DEFAULT_DEV_SERVER_PORT})`,
+    placeholder: '<origin>',
+    description:
+      'run: load the bundle from this `expo start` dev server instead of bundling the app: Fast Refresh, r to reload, LogBox and logs in its terminal',
   },
+  gui: { type: 'boolean', description: 'run: also open the live screen and remote in the browser' },
   'no-logs': {
     type: 'boolean',
     description: 'run: exit once the app is up instead of printing its logs',
@@ -284,7 +279,7 @@ export const simulatorCommand: Command = {
   examples: [
     'rn-tizen simulator run                  build, bundle and start the app, then print its logs',
     'rn-tizen simulator run --gui            the same, and open the live screen and remote',
-    'rn-tizen simulator run --dev-server     load the bundle from `expo start` instead, with Fast Refresh',
+    'rn-tizen simulator run --dev-server http://localhost:8081  load the bundle from `expo start`, with Fast Refresh',
     'rn-tizen simulator view                 open the live screen of the running app',
     'rn-tizen simulator screenshot --out shot.png',
     'rn-tizen simulator key Down Down Enter  Up Down Left Right Enter Back Exit Play Pause Stop ...',

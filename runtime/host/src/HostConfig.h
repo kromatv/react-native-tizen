@@ -14,7 +14,7 @@ struct LogEndpoint {
 
 /// `react-native-tizen.json`, written into the package's `res` directory by
 /// `rn-tizen`. A bundle comes from `bundleUrl` (a dev server) when set, from the
-/// packaged `bundleFile`, then required, otherwise. See docs/runtime-config.md.
+/// packaged `bundleFile` otherwise. See docs/runtime-config.md.
 struct HostConfig {
   std::string appKey;
   std::string bundleFile;

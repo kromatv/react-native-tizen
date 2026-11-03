@@ -27,6 +27,7 @@ from memory.
 | `shell/`, `src/package/`, `src/tizen/`, manifests, signing | `tizen-tv-platform.md` |
 | `src/sdb/`, `src/tizen/devices.ts`, `src/tizen/install-app.ts` | `sdb-protocol.md` |
 | `src/discovery/` | `tv-discovery.md` |
+| `app.plugin.js`, `src/config/config-plugin.ts`, `src/devtools/`, `devtools/`, `expo-module.config.json` | `expo-cli-integration.md` |
 | `src/signing/`, `src/tizen/signing-identity.ts`, `src/tizen/profiles-file.ts`, `src/tizen/profile-password.ts` | `tizen-package-signing.md` |
 | `runtime/host/src/input/` | `tizen-input.md` |
 | `<TextInput>`: `views/TextInput*`, `fabric/TextInput*`, `input/KeyboardFocus`, `input/Ime*` | `text-input.md` |
@@ -34,7 +35,7 @@ from memory.
 | `runtime/host/src/views/`, `text/`, `mounting/` | `efl-rendering.md` |
 | `src/libraries/`, `runtime/cmake/Libraries.cmake`, `runtime/host/src/svg/` | `../native-modules.md`, `efl-rendering.md` |
 | `runtime/host/src/` (host, Fabric, TurboModules) | `react-native-platform-contract.md` |
-| `runtime/host/devsupport/`, `src/package/dev-server.ts`, `--dev-server` | `react-native-dev-tooling.md` |
+| `runtime/host/devsupport/`, `src/package/dev-server-bundle.ts`, `--dev-server` | `react-native-dev-tooling.md` |
 | `runtime/host/expo/` | `expo-modules-contract.md` |
 | `runtime/host/src/tv/`, `shell/Voice*`, `shell/Preview*`, `shell/TilePayload.cs`, `src/api/`, `src/config/tv-features.ts` | `tizen-tv-app-integration.md`, `tizen-smart-hub-preview.md`, `tizen-tv-platform.md` section 7 |
 | `runtime/cmake/Icu.cmake`, `runtime/intl/`, `runtime/host/src/intl/`, `src/runtime/icu-*`, `react-native-overrides/intl/` | `intl.md` |

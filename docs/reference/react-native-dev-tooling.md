@@ -36,8 +36,9 @@ Line numbers are pinned to these builds, read on 2026-11-03:
 
 So a Tizen build needs one URL: rn-tizen writes
 `http://<host>:<port>/.expo/.virtual-metro-entry.bundle?platform=tizen&dev=true&lazy=true&minify=false&app=<package id>&modulesOnly=false&runModule=true&transform.engine=hermes&unstable_transformProfile=hermes-stable`
-into `bundleUrl` (`src/package/dev-server.ts`), and the host derives every
-other endpoint from it (`devsupport/DevServer.cpp`).
+into `bundleUrl` (`src/package/dev-server-bundle.ts`), `<host>:<port>` being the
+`--dev-server` origin with a loopback host replaced by one the TV reaches, and
+the host derives every other endpoint from it (`devsupport/DevServer.cpp`).
 
 ## 2. The packager socket: `r` and `m`
 

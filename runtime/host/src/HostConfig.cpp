@@ -6,7 +6,6 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 
 namespace rntizen {
 
@@ -78,12 +77,10 @@ bool isUhd(const folly::dynamic &config) {
 HostConfig loadHostConfig(const std::string &resourceDir) {
   const auto config = folly::parseJson(readConfigText(resourceDir + "/" + kConfigFile));
   if (!config.isObject()) throw std::runtime_error(std::string(kConfigFile) + " must hold a JSON object");
-  auto bundleUrl = optionalString(config, "bundleUrl");
-  auto bundleFile = bundleUrl ? optionalString(config, "bundleFile").value_or("") : requireString(config, "bundleFile");
   return HostConfig{
       .appKey = requireString(config, "appKey"),
-      .bundleFile = std::move(bundleFile),
-      .bundleUrl = std::move(bundleUrl),
+      .bundleFile = requireString(config, "bundleFile"),
+      .bundleUrl = optionalString(config, "bundleUrl"),
       .logEndpoint = optionalLogEndpoint(config),
       .development = optionalBool(config, "development"),
       .resourceDir = resourceDir,
