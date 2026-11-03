@@ -1,3 +1,4 @@
+import type { X509Certificate } from 'node:crypto';
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { AppProject } from '../app/app-project.ts';
@@ -78,7 +79,16 @@ function bundleOrDevServer(reporter: Reporter, request: PackageRequest): Promise
  * development runtime. Fails fast, before any compiling, when there is
  * nothing to sign with.
  */
-export async function packageSteps(reporter: Reporter, request: PackageRequest): Promise<string> {
+/** A built package and the distributor certificate that signed it. */
+export interface BuiltPackage {
+  readonly tpk: string;
+  readonly distributor: X509Certificate;
+}
+
+export async function packageSteps(
+  reporter: Reporter,
+  request: PackageRequest,
+): Promise<BuiltPackage> {
   const { sdk, app, target, shell } = request;
   claimTizenDir(app.tizenDir);
   const signing = await reporter.step(
@@ -111,5 +121,5 @@ export async function packageSteps(reporter: Reporter, request: PackageRequest):
     () => signPackage(tpk, signing.identity),
     () => signing.name,
   );
-  return tpk;
+  return { tpk, distributor: signing.distributor };
 }
