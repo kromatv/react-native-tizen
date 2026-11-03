@@ -8,6 +8,7 @@ import {
   type OptionSpecs,
 } from '../cli/command.ts';
 import { LEVEL_OPTIONS, parseLevel, untilInterrupted } from '../cli/log-level-option.ts';
+import { RELEASE_OPTION } from '../cli/log-options.ts';
 import { crashSymbolizer } from '../logs/llvm-symbolizer.ts';
 import { LogPrinter } from '../logs/log-printer.ts';
 import { listenForLogs, type LogServer } from '../logs/log-server.ts';
@@ -18,6 +19,7 @@ import { BUILD_OPTIONS, findDevice, openBuild, settleBuild } from './build-optio
 
 const OPTIONS = {
   ...BUILD_OPTIONS,
+  ...RELEASE_OPTION,
   ...LEVEL_OPTIONS,
   'no-logs': {
     type: 'boolean',

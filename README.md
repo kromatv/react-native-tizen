@@ -68,10 +68,12 @@ npx rn-tizen run --device 192.168.1.107
 native runtime, which takes a few minutes; later runs only rebuild what
 changed. It installs the app, launches it and prints its logs until Ctrl+C.
 
-To build a package without a TV, for the store or to install by hand:
+Store packages need a release build, which `package` makes; `--dev` makes a
+development one that streams its logs:
 
 ```sh
-npx rn-tizen package --release
+npx rn-tizen package
+npx rn-tizen package --dev
 ```
 
 ## Documentation

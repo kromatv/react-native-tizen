@@ -161,13 +161,14 @@ seconds rather than after a build.
 | `--arch <arch>` | Override the CPU |
 | `--platform <version>` | Override the Tizen version |
 | `--profile <name>` | Sign with this security profile |
-| `--release` | Build for the store: the app streams no logs |
-| `--log-host <ip>` | Where a development build streams its logs (default: this computer's LAN address, on the TV's subnet when `--device` is given) |
-| `--log-port <port>` | The port it streams to (default `8099`) |
+| `--dev` | Build for development: the app streams its logs to this computer |
+| `--log-host <ip>` | With `--dev`, where the app streams its logs (default: this computer's LAN address, on the TV's subnet when `--device` is given) |
+| `--log-port <port>` | With `--dev`, the port it streams to (default `8099`) |
 | `--entry <file>` | The entry to bundle (default: the app's `main`) |
 
-A development build (the default) carries the log endpoint in
-`res/react-native-tizen.json`; a `--release` build carries none. Every
+`package` makes a release build, the one Samsung's store takes: it streams no
+logs. A development build (`--dev`) carries the log endpoint in
+`res/react-native-tizen.json`. Every
 package carries `res/THIRD_PARTY_NOTICES.md`, the licences of what the
 runtime links and the bundle holds
 ([`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)); add the notices of
@@ -175,17 +176,19 @@ the native libraries your app adds to your own.
 
 ```sh
 rn-tizen package
-rn-tizen package --device 192.168.1.107
-rn-tizen package --release --profile Store
+rn-tizen package --profile Store
+rn-tizen package --dev --device 192.168.1.50
 ```
 
 ### `rn-tizen run`
 
-Packages the app, installs it on a TV, launches it, then prints its logs until
-Ctrl+C. Takes every `package` option, plus:
+Packages a development build of the app, installs it on a TV, launches it,
+then prints its logs until Ctrl+C. Takes every `package` option but `--dev`,
+plus:
 
 | Option | |
 |---|---|
+| `--release` | Build for the store instead: the app streams no logs, so nothing prints |
 | `--level <level>` | The quietest log level to show: `debug`, `info`, `warn` or `error` (default `info`) |
 | `--no-logs` | Exit once the app is launched |
 

@@ -109,7 +109,7 @@ the background", default `false`; [ex] `VideoPlayer.types.ts`).
 
 | Piece | Where | Does |
 |---|---|---|
-| `["expo-video", { "supportsBackgroundPlayback": true }]` in `plugins` | `rn-tizen package` | adds `<background-category value="media" />` to the `ui-application`. No Tizen key: the same `app.json` works on Android and iOS. `--release` prints that Samsung pauses hidden apps ([faq] Q22) |
+| `["expo-video", { "supportsBackgroundPlayback": true }]` in `plugins` | `rn-tizen package` | adds `<background-category value="media" />` to the `ui-application`. No Tizen key: the same `app.json` works on Android and iOS. a release build prints that Samsung pauses hidden apps ([faq] Q22) |
 | `OnPause` | shell | already calls `rn_tizen_host_pause` |
 | Pause on background | host | every `VideoPlayer` whose `staysActiveInBackground` is `false` pauses at `rn_tizen_host_pause`, as expo-video's Android `VideoManager.onAppBackgrounded` does ([ex] `android/.../managers/VideoManager.kt:154-191`); nothing resumes by itself at `OnResume`, and `AppState` turns `active` as today |
 | `staysActiveInBackground: true` | host | the player keeps running; without the manifest category the host logs that the TV will suspend the app |

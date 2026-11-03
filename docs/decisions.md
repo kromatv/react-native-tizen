@@ -187,8 +187,8 @@ platform check, and answer "not available" on Android, iOS and the web.
 Consequence: these features rest on unpublished Samsung protocols and
 assemblies (facts in [tizen-tv-app-integration.md](reference/tizen-tv-app-integration.md)
 and [tizen-smart-hub-preview.md](reference/tizen-smart-hub-preview.md)), and a
-store build must clear them with Samsung's content manager first;
-`rn-tizen package --release` says so.
+store build must clear them with Samsung's content manager first; a release
+`rn-tizen package` says so.
 
 
 ## The package ships JavaScript, and the CLI runs on Node

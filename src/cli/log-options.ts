@@ -5,12 +5,24 @@ import { pickLanAddress } from '../logs/lan-address.ts';
 import { DEFAULT_LOG_PORT, type LogEndpoint } from '../package/runtime-config.ts';
 import { UsageError, type OptionSpecs } from './command.ts';
 
-/** The options that decide where a development build streams its logs. */
-export const LOG_OPTIONS = {
+/** `--release`, for a command that builds for development unless asked. */
+export const RELEASE_OPTION = {
   release: {
     type: 'boolean',
     description: 'Build for the store: the app streams no logs',
   },
+} as const satisfies OptionSpecs;
+
+/** `--dev`, for a command that builds for the store unless asked. */
+export const DEV_OPTION = {
+  dev: {
+    type: 'boolean',
+    description: 'Build for development: the app streams its logs to this computer',
+  },
+} as const satisfies OptionSpecs;
+
+/** The options that decide where a development build streams its logs. */
+export const LOG_OPTIONS = {
   'log-host': {
     type: 'string',
     placeholder: '<ip>',
@@ -54,6 +66,6 @@ export function chooseLogEndpoint(choice: LogChoice): LogEndpoint | null {
   if (host !== null) return { host, port };
   throw new FixableError(
     "Could not find this computer's address on the local network",
-    'Pass --log-host <ip> with an address the TV can reach, or --release to stream no logs.',
+    'Pass --log-host <ip> with an address the TV can reach, or make a release build, which streams no logs.',
   );
 }

@@ -35,6 +35,7 @@ interface BuildFlags {
   readonly platform?: string;
   readonly profile?: string;
   readonly release?: boolean;
+  readonly dev?: boolean;
   readonly 'log-host'?: string;
   readonly 'log-port'?: string;
   readonly project?: string;
