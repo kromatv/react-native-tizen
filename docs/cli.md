@@ -150,7 +150,9 @@ Tizen host and the app's Expo modules core) against the app's own
 later ones only rebuild what changed. It also builds the Hermes compilers for
 this machine, once per Hermes version.
 
-Takes `--arch`, `--platform` and `--project`.
+Takes `--arch`, `--platform` and `--project`. It builds the development
+runtime, the one `run` packages, unless given `--release`: release builds get
+a runtime without the dev server tooling ([decisions](decisions.md)).
 
 ### `rn-tizen bundle`
 
@@ -195,6 +197,8 @@ Manager: a retail TV refuses a self-signed author certificate.
 | `--dev` | Build for development: the app streams its logs to this computer |
 | `--log-host <ip>` | With `--dev`, where the app streams its logs (default: this computer's LAN address, on the TV's subnet when `--device` is given) |
 | `--log-port <port>` | With `--dev`, the port it streams to (default `8099`) |
+| `--dev-server` | With `--dev`, load the bundle from `expo start` on this computer instead of packaging it |
+| `--dev-server-port <port>` | The port `expo start` listens on (default `8081`) |
 | `--entry <file>` | The entry to bundle (default: the app's `main`) |
 
 `package` makes a release build, the one Samsung's store takes: it streams no
@@ -222,6 +226,8 @@ plus:
 | `--release` | Build for the store instead: the app streams no logs, so nothing prints |
 | `--level <level>` | The quietest log level to show: `debug`, `info`, `warn` or `error` (default `info`) |
 | `--no-logs` | Exit once the app is launched |
+| `--dev-server` | Load the bundle from `expo start` on this computer instead of packaging it: see [Develop with `expo start`](#develop-with-expo-start) |
+| `--dev-server-port <port>` | The port `expo start` listens on (default `8081`) |
 
 Without `--device`, it uses the only TV reached before that answers. `Install`
 pushes the package to the TV and installs it, replacing any earlier install;
@@ -231,7 +237,32 @@ use fails before anything compiles, and nothing the app logs at startup is lost.
 ```sh
 rn-tizen run --device 192.168.1.50
 rn-tizen run --level debug
+rn-tizen run --dev-server
 ```
+
+### Develop with `expo start`
+
+```sh
+npx expo start                 # in the app, as for Android
+rn-tizen run --dev-server      # once: install a build that loads from it
+```
+
+A build made with `--dev-server` carries no bundle: its runtime config points
+at `expo start` on this computer (`http://<this computer's LAN address>:8081`,
+or `--dev-server-port`), and the TV fetches the bundle from there at each
+start. Then, as with an Android device:
+
+- an edit reaches the TV through Fast Refresh, keeping state;
+- `r` in `expo start`'s terminal, or `DevSettings.reload()`, reloads the app;
+- `console.log` and errors from the TV print in that terminal;
+- LogBox shows errors and warnings on the TV; Back closes its inspector.
+
+Install the build once: it keeps working across edits, reloads and restarts of
+`expo start`, as long as the server keeps its address and port. `rn-tizen
+simulator run --dev-server` does the same on the simulator. The TV still
+streams its log lines and native crashes to `rn-tizen`, which prints them
+until Ctrl+C: Metro only sees what JavaScript logs, and nothing from the
+native runtime.
 
 ### `rn-tizen logs`
 
@@ -345,6 +376,7 @@ later runs rebuild only what changed.
 
 ```sh
 rn-tizen simulator run --gui           # build, bundle, start, open the live screen
+rn-tizen simulator run --dev-server    # load the bundle from `expo start` on this Mac instead
 rn-tizen simulator key Down Enter      # press remote keys
 rn-tizen simulator screenshot --out shot.png
 rn-tizen simulator crash               # backtraces of the last native crash

@@ -93,6 +93,7 @@ describe('packageSteps', () => {
       target: { arch: 'armv7l', platformVersion: '9.0' },
       shell: platformProfile('9.0'),
       log: null,
+      devServer: null,
       signing: { author: 'author.p12' },
     });
 
@@ -105,6 +106,26 @@ describe('packageSteps', () => {
       expect.objectContaining({ runtimeLibrary: join(root, 'libreact-native-tizen.so') }),
     );
     expect(signPackage).toHaveBeenCalledWith(tpk, SIGNING.identity);
+    expect(vi.mocked(runtimeSteps).mock.calls[0]?.[4]).toBe('release');
+  });
+
+  it('points a development build at the dev server instead of bundling', async () => {
+    const app = fakeApp(root);
+
+    await packageSteps(reporter(), {
+      sdk: SDK,
+      app,
+      target: { arch: 'armv7l', platformVersion: '9.0' },
+      shell: platformProfile('9.0'),
+      log: { host: '10.0.0.2', port: 8099 },
+      devServer: new URL('http://10.0.0.2:8081'),
+      signing: { author: 'author.p12' },
+    });
+
+    expect(bundleApp).not.toHaveBeenCalled();
+    expect(vi.mocked(runtimeSteps).mock.calls[0]?.[4]).toBe('development');
+    const { bundle } = vi.mocked(writeTizenProject).mock.calls[0]?.[0] ?? {};
+    expect(bundle).toEqual({ url: expect.stringMatching(/^http:\/\/10\.0\.0\.2:8081\/\.expo\//) });
   });
 
   it("stops before compiling anything when the app's tizen/ is its own", async () => {
@@ -118,6 +139,7 @@ describe('packageSteps', () => {
         target: { arch: 'armv7l', platformVersion: '9.0' },
         shell: platformProfile('9.0'),
         log: null,
+        devServer: null,
         signing: { profile: 'Store' },
       }),
     ).rejects.toThrow("is the app's own");

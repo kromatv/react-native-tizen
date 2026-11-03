@@ -8,6 +8,10 @@ if(TARGET expo_modules_common)
   file(GLOB_RECURSE _expo_host_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/expo/*.cpp")
   list(APPEND _host_sources ${_expo_host_sources})
 endif()
+if(RN_TIZEN_DEVELOPMENT)
+  file(GLOB_RECURSE _devsupport_sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/devsupport/*.cpp")
+  list(APPEND _host_sources ${_devsupport_sources})
+endif()
 # React Native's cross-platform TextInput props. Its Android props, shadow node
 # and state need Android's serializable props or Java, so host/src/fabric has
 # its own.
@@ -39,6 +43,9 @@ set_target_properties(rn_tizen_host PROPERTIES
 if(TARGET expo_modules_common)
   list(APPEND _react_native_roots expo_modules_common)
   target_compile_definitions(rn_tizen_host PRIVATE RN_TIZEN_EXPO=1)
+endif()
+if(RN_TIZEN_DEVELOPMENT)
+  target_compile_definitions(rn_tizen_host PRIVATE RN_TIZEN_DEV_SUPPORT=1)
 endif()
 target_link_libraries(rn_tizen_host PUBLIC ${_react_native_roots} Threads::Threads ${CMAKE_DL_LIBS})
 target_link_tizen_libraries(rn_tizen_host ${_tizen_libraries})

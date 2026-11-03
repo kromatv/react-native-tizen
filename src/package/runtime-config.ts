@@ -14,9 +14,13 @@ export interface LogEndpoint {
   readonly port: number;
 }
 
+/** Where the host loads the app's bundle from: a file in `res/`, or a dev server. */
+export type BundleSource = { readonly file: string } | { readonly url: string };
+
 const runtimeConfigSchema = z.object({
   appKey: z.string().min(1),
-  bundleFile: z.string().min(1),
+  bundleFile: z.string().min(1).optional(),
+  bundleUrl: z.url({ protocol: /^https?$/ }).optional(),
   development: z.boolean(),
   log: z.object({ host: z.string().min(1), port: z.number().int().min(1).max(65535) }).optional(),
   resolution: z.enum(['1080p', '4k']),
@@ -50,19 +54,20 @@ function previewFields(config: Pick<TizenAppConfig, 'packageId' | 'features'>) {
 
 /**
  * The runtime config of a package. A development build streams its logs and
- * shows fatal JavaScript errors on screen; a release one does neither. The
- * app's TV features tell the host and the shell what to start.
+ * shows fatal JavaScript errors on screen; a release one does neither. A
+ * bundle from a dev server makes a development build. The app's TV features
+ * tell the host and the shell what to start.
  */
 export function runtimeConfig(
-  bundleFile: string,
+  bundle: BundleSource,
   log: LogEndpoint | null,
   config: Pick<TizenAppConfig, 'packageId' | 'features'>,
 ): RuntimeConfig {
   const { voice, resolution, backgroundMedia } = config.features;
   return runtimeConfigSchema.parse({
     appKey: 'main',
-    bundleFile,
-    development: log !== null,
+    ...('file' in bundle ? { bundleFile: bundle.file } : { bundleUrl: bundle.url }),
+    development: log !== null || 'url' in bundle,
     ...(log === null ? {} : { log: { host: log.host, port: log.port } }),
     resolution,
     backgroundMedia,

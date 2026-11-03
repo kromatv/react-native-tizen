@@ -1,19 +1,21 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { loadAppProject, type AppProject } from '../app/app-project.ts';
-import { entryPath, type CommandContext } from '../cli/command.ts';
+import { entryPath, UsageError, type CommandContext } from '../cli/command.ts';
+import { devServerOrigin, parseDevServerPort } from '../cli/dev-server-options.ts';
 import { parseLevel, untilInterrupted } from '../cli/log-level-option.ts';
 import { parsePort } from '../cli/log-options.ts';
 import { FixableError } from '../errors.ts';
 import { Reporter } from '../cli/reporter.ts';
 import { LogPrinter } from '../logs/log-printer.ts';
 import { listenForLogs, type LogServer } from '../logs/log-server.ts';
+import { devServerBundleUrl } from '../package/dev-server.ts';
 import { bundleStep } from '../pipeline/package-steps.ts';
 import { simulatorCommandLine, type SimulatorInstance } from '../simulator/instance.ts';
 import { ensureVm, hostAddress, startApp, type VmPreparation } from '../simulator/simulator.ts';
 import { ensureIcuData } from '../runtime/icu-data.ts';
 import { buildSimulatorRuntime } from '../simulator/simulator-runtime.ts';
-import { stageApp, type SimulatorBundle } from '../simulator/stage-app.ts';
+import { stageApp, type SimulatorBundle, type StagedBundle } from '../simulator/stage-app.ts';
 import { openInBrowser, startViewer, viewerUrl } from '../simulator/viewer.ts';
 
 /** The flags `rn-tizen simulator run` and `build` read. */
@@ -24,6 +26,8 @@ export interface SimulatorRunFlags {
   readonly gui?: boolean;
   readonly 'no-logs'?: boolean;
   readonly 'log-port'?: string;
+  readonly 'dev-server'?: boolean;
+  readonly 'dev-server-port'?: string;
   readonly level?: string;
 }
 
@@ -87,6 +91,36 @@ function listenForInstanceLogs(
   return listenForLogs(port, printer, { inUseHint: busy });
 }
 
+function simulatorBundle(
+  reporter: Reporter,
+  app: AppProject,
+  flags: SimulatorRunFlags,
+  cwd: string,
+): Promise<StagedBundle> {
+  if (flags['dev-server'] !== true) {
+    if (flags['dev-server-port'] !== undefined) {
+      throw new UsageError('--dev-server-port needs --dev-server', 'simulator');
+    }
+    if (flags.bundle !== undefined)
+      return Promise.resolve(givenBytecode(resolve(cwd, flags.bundle)));
+    return bundleStep(reporter, app);
+  }
+  if (flags.bundle !== undefined) {
+    throw new UsageError(
+      '--bundle and --dev-server each give the app its bundle: pick one',
+      'simulator',
+    );
+  }
+  const port = parseDevServerPort(flags['dev-server-port'], 'simulator');
+  return reporter.step(
+    'Dev server',
+    async (task) => ({
+      url: devServerBundleUrl(devServerOrigin(await hostAddress(task), port), app.config.packageId),
+    }),
+    (bundle) => bundle.url,
+  );
+}
+
 /**
  * `rn-tizen simulator run`: builds what changed, bundles the app, starts it on
  * the virtual TV of `instance` and prints its logs until Ctrl+C. The app keeps
@@ -106,10 +140,7 @@ export async function runInSimulator(
   try {
     reporter.field('Instance', describeInstance(instance));
     const { app, runtime } = await prepareSimulator(reporter, flags, context);
-    const bundle: SimulatorBundle =
-      flags.bundle === undefined
-        ? await bundleStep(reporter, app)
-        : givenBytecode(resolve(context.cwd, flags.bundle));
+    const bundle = await simulatorBundle(reporter, app, flags, context.cwd);
     await reporter.step(
       'Start',
       async (task) => {

@@ -13,7 +13,9 @@ const app = { packageId: 'org.example.app', features };
 
 describe('runtimeConfig', () => {
   it('marks a development build and points it at the log listener', () => {
-    expect(runtimeConfig('index.tizen.hbc', { host: '192.168.1.20', port: 8099 }, app)).toEqual({
+    expect(
+      runtimeConfig({ file: 'index.tizen.hbc' }, { host: '192.168.1.20', port: 8099 }, app),
+    ).toEqual({
       appKey: 'main',
       bundleFile: 'index.tizen.hbc',
       development: true,
@@ -24,7 +26,7 @@ describe('runtimeConfig', () => {
   });
 
   it('marks a release build, which streams no logs', () => {
-    expect(runtimeConfig('index.tizen.hbc', null, app)).toEqual({
+    expect(runtimeConfig({ file: 'index.tizen.hbc' }, null, app)).toEqual({
       appKey: 'main',
       bundleFile: 'index.tizen.hbc',
       development: false,
@@ -33,12 +35,30 @@ describe('runtimeConfig', () => {
     });
   });
 
+  it('points a build at a dev server, which makes it a development build', () => {
+    const url = 'http://192.168.1.20:8081/.expo/.virtual-metro-entry.bundle?platform=tizen';
+
+    expect(runtimeConfig({ url }, null, app)).toEqual({
+      appKey: 'main',
+      bundleUrl: url,
+      development: true,
+      resolution: '1080p',
+      backgroundMedia: false,
+    });
+  });
+
+  it('refuses a dev server the host cannot fetch from', () => {
+    expect(() => runtimeConfig({ url: 'ws://192.168.1.20:8081/x.bundle' }, null, app)).toThrow();
+  });
+
   it('refuses a port the host would refuse', () => {
-    expect(() => runtimeConfig('index.tizen.hbc', { host: 'h', port: 70000 }, app)).toThrow();
+    expect(() =>
+      runtimeConfig({ file: 'index.tizen.hbc' }, { host: 'h', port: 70000 }, app),
+    ).toThrow();
   });
 
   it('tells the host and the shell which TV features to start', () => {
-    const config = runtimeConfig('index.tizen.hbc', null, {
+    const config = runtimeConfig({ file: 'index.tizen.hbc' }, null, {
       packageId: 'org.example.app',
       features: {
         ...features,
@@ -58,7 +78,7 @@ describe('runtimeConfig', () => {
   });
 
   it('turns voice on with no search URL', () => {
-    const config = runtimeConfig('index.tizen.hbc', null, {
+    const config = runtimeConfig({ file: 'index.tizen.hbc' }, null, {
       ...app,
       features: { ...features, voice: { searchUrl: null } },
     });

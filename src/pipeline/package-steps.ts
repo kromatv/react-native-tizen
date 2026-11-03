@@ -8,8 +8,9 @@ import { ensureIcuData } from '../runtime/icu-data.ts';
 import type { Reporter } from '../cli/reporter.ts';
 import { buildDotnetProject } from '../package/dotnet-build.ts';
 import { featureNotes } from '../package/feature-notes.ts';
+import { devServerBundleUrl } from '../package/dev-server.ts';
 import type { LogEndpoint } from '../package/runtime-config.ts';
-import { writeTizenProject } from '../package/tizen-project.ts';
+import { writeTizenProject, type PackagedBundle } from '../package/tizen-project.ts';
 import type { PlatformProfile } from '../tizen/platform-profiles.ts';
 import { signPackage } from '../signing/sign-package.ts';
 import { resolveSigning, type SigningRequest } from '../tizen/signing-identity.ts';
@@ -23,6 +24,7 @@ interface PackageRequest {
   readonly target: TizenTarget;
   readonly shell: PlatformProfile;
   readonly log: LogEndpoint | null;
+  readonly devServer: URL | null;
   readonly signing: SigningRequest;
 }
 
@@ -61,10 +63,20 @@ function until(date: string): string {
   return new Date(date).toISOString().slice(0, 10);
 }
 
+function bundleOrDevServer(reporter: Reporter, request: PackageRequest): Promise<PackagedBundle> {
+  const { app, devServer } = request;
+  if (devServer === null) return bundleStep(reporter, app);
+  const url = devServerBundleUrl(devServer, app.config.packageId);
+  reporter.field('Dev server', url);
+  return Promise.resolve({ url });
+}
+
 /**
  * Builds a signed `.tpk` from scratch or incrementally: the native runtime, the
- * bytecode bundle, the generated `tizen/` project, then .NET and signing.
- * Fails fast, before any compiling, when there is nothing to sign with.
+ * bytecode bundle (unless the app loads it from a dev server), the generated
+ * `tizen/` project, then .NET and signing. A development build gets the
+ * development runtime. Fails fast, before any compiling, when there is
+ * nothing to sign with.
  */
 export async function packageSteps(reporter: Reporter, request: PackageRequest): Promise<string> {
   const { sdk, app, target, shell } = request;
@@ -79,8 +91,9 @@ export async function packageSteps(reporter: Reporter, request: PackageRequest):
     (resolved) => `${resolved.name}, distributor until ${until(resolved.distributor.validTo)}`,
   );
   for (const note of featureNotes(app.config.features, request.log === null)) reporter.note(note);
-  const runtimeLibrary = await runtimeSteps(reporter, sdk, app, target);
-  const bundle = await bundleStep(reporter, app);
+  const flavour = request.log === null ? 'release' : 'development';
+  const runtimeLibrary = await runtimeSteps(reporter, sdk, app, target, flavour);
+  const bundle = await bundleOrDevServer(reporter, request);
   const icuData = await icuDataStep(reporter, app);
   const projectDir = await reporter.step(
     'Tizen project',

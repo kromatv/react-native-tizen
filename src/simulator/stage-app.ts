@@ -24,20 +24,24 @@ export interface SimulatorRuntime {
   readonly icuData: string;
 }
 
+/** A bundle the simulator runs, or the dev server URL the app loads it from. */
+export type StagedBundle = SimulatorBundle | { readonly url: string };
+
 async function writeResources(
   dir: string,
   app: AppProject,
-  bundle: SimulatorBundle,
+  bundle: StagedBundle,
   log: LogEndpoint | null,
   icuData: string,
 ) {
-  await copyFile(bundle.bytecode, join(dir, BYTECODE_FILE));
+  if ('bytecode' in bundle) await copyFile(bundle.bytecode, join(dir, BYTECODE_FILE));
   await copyFile(icuData, join(dir, basename(icuData)));
   await writeAppConfig(app.root, dir);
-  if (bundle.assetsDir !== undefined && existsSync(bundle.assetsDir)) {
+  if ('bytecode' in bundle && bundle.assetsDir !== undefined && existsSync(bundle.assetsDir)) {
     await cp(bundle.assetsDir, join(dir, 'assets'), { recursive: true });
   }
-  const config = runtimeConfig(BYTECODE_FILE, log, app.config);
+  const source = 'bytecode' in bundle ? { file: BYTECODE_FILE } : { url: bundle.url };
+  const config = runtimeConfig(source, log, app.config);
   await writeFile(join(dir, RUNTIME_CONFIG_FILE), `${JSON.stringify(config, null, 2)}\n`);
 }
 
@@ -66,7 +70,7 @@ function archive(dir: string) {
 export async function stageApp(
   instance: SimulatorInstance,
   app: AppProject,
-  bundle: SimulatorBundle,
+  bundle: StagedBundle,
   log: LogEndpoint | null,
   runtime: SimulatorRuntime,
 ): Promise<void> {
