@@ -15,15 +15,54 @@ export interface TizenTarget {
   readonly platformVersion: string;
 }
 
+/** Orders two `major.minor` Tizen versions. */
+export function compareTizenVersions(left: string, right: string): number {
+  const [leftMajor = 0, leftMinor = 0] = left.split('.').map(Number);
+  const [rightMajor = 0, rightMinor = 0] = right.split('.').map(Number);
+  return leftMajor - rightMajor || leftMinor - rightMinor;
+}
+
+/** A Tizen Studio rootstrap: where it is installed and the package that installs it. */
+export interface Rootstrap {
+  readonly profile: 'tizen' | 'iot-headed';
+  readonly platformVersion: string;
+  readonly name: string;
+  readonly sdkPackage: string;
+}
+
 const ROOTSTRAP_KIND: Record<TizenArch, string> = {
   armv7l: 'device',
   aarch64: 'device64',
   x86_64: 'emulator64',
 };
 
-/** The rootstrap directory name Tizen Studio installs for a target. */
-export function rootstrapName({ arch, platformVersion }: TizenTarget): string {
-  return `tizen-${platformVersion}-${ROOTSTRAP_KIND[arch]}.core`;
+// Tizen Studio publishes no TV rootstrap. From 8.0 it has one `tizen` profile;
+// before, IoT Headed is the profile with armv7 and aarch64 rootstraps (mobile
+// has armv7 only), and the first x86_64 rootstrap is 8.0's.
+const UNIFIED_PROFILE_SINCE = '8.0';
+const FIRST_EMULATOR64 = '8.0';
+
+/** The rootstrap a target is compiled and linked against. */
+export function rootstrapFor({ arch, platformVersion }: TizenTarget): Rootstrap {
+  const version =
+    arch === 'x86_64' && compareTizenVersions(platformVersion, FIRST_EMULATOR64) < 0
+      ? FIRST_EMULATOR64
+      : platformVersion;
+  const kind = ROOTSTRAP_KIND[arch];
+  if (compareTizenVersions(version, UNIFIED_PROFILE_SINCE) >= 0) {
+    return {
+      profile: 'tizen',
+      platformVersion: version,
+      name: `tizen-${version}-${kind}.core`,
+      sdkPackage: `TIZEN-${version}-NativeAppDevelopment-CLI`,
+    };
+  }
+  return {
+    profile: 'iot-headed',
+    platformVersion: version,
+    name: `iot-headed-${version}-${kind}.core`,
+    sdkPackage: `IOT-Headed-${version}-NativeAppDevelopment-CLI`,
+  };
 }
 
 const DEVICE_ARCH: Record<string, TizenArch> = {

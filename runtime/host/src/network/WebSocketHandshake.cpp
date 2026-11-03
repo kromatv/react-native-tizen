@@ -36,7 +36,8 @@ std::string trimmed(std::string_view text) {
   return std::string(text.substr(first, last - first + 1));
 }
 
-std::optional<std::string> urlPart(const CURLU *url, CURLUPart part) {
+// curl before 8.0 (Tizen 6.0 to 8.0 ship 7.68 to 7.86) takes a non-const handle.
+std::optional<std::string> urlPart(CURLU *url, CURLUPart part) {
   char *value = nullptr;
   if (curl_url_get(url, part, &value, 0) != CURLUE_OK) return std::nullopt;
   std::string result(value);
