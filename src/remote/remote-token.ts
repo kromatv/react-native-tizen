@@ -1,6 +1,7 @@
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { cacheDir, stateDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
+import { stateDir } from '../state-dir.ts';
 
 const TOKEN = /^[0-9A-Za-z]{1,64}$/;
 const PRIVATE_DIR = 0o700;

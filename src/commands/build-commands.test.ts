@@ -6,8 +6,8 @@ import { listenForLogs, type LogServer } from '../logs/log-server.ts';
 import { bundleStep, packageSteps } from '../pipeline/package-steps.ts';
 import { runtimeSteps } from '../pipeline/runtime-steps.ts';
 import { setupTarget } from '../sysroot/setup-target.ts';
-import { resolveDevice } from '../tizen/sdb.ts';
-import { installPackage, launchPackage } from '../tizen/tizen-cli.ts';
+import { resolveDevice } from '../tizen/devices.ts';
+import { installApp, launchApp } from '../tizen/install-app.ts';
 import { buildRuntimeCommand } from './build-runtime.ts';
 import { bundleCommand } from './bundle.ts';
 import { packageCommand } from './package.ts';
@@ -17,15 +17,16 @@ import { setupCommand } from './setup.ts';
 const ROOT = '/work/app';
 const SDK = { root: '/tizen-studio', sdb: '/sdb', tizenCli: '/tizen', packageManager: '/pm' };
 const TV = {
+  address: { host: '192.168.1.50', port: 26101 },
   serial: '192.168.1.50:26101',
   name: 'Living room',
-  capabilities: { cpuArch: 'armv7', platformVersion: '9.0', profile: 'tv' },
+  capabilities: { cpuArch: 'armv7', platformVersion: '9.0', profile: 'tv', toolPath: null },
 };
 
 vi.mock('../app/app-project.ts', () => ({ loadAppProject: vi.fn() }));
 vi.mock('../tizen/tizen-sdk.ts', () => ({ locateTizenSdk: () => SDK }));
-vi.mock('../tizen/sdb.ts', () => ({ resolveDevice: vi.fn() }));
-vi.mock('../tizen/tizen-cli.ts', () => ({ installPackage: vi.fn(), launchPackage: vi.fn() }));
+vi.mock('../tizen/devices.ts', () => ({ resolveDevice: vi.fn() }));
+vi.mock('../tizen/install-app.ts', () => ({ installApp: vi.fn(), launchApp: vi.fn() }));
 vi.mock('../pipeline/package-steps.ts', () => ({ bundleStep: vi.fn(), packageSteps: vi.fn() }));
 vi.mock('../pipeline/runtime-steps.ts', () => ({ runtimeSteps: vi.fn() }));
 vi.mock('../sysroot/setup-target.ts', () => ({ setupTarget: vi.fn() }));
@@ -86,7 +87,7 @@ describe('rn-tizen package', () => {
   it('builds for the store by default, for the TV it was given', async () => {
     await packageCommand.run(['--device', '192.168.1.50'], context);
 
-    expect(resolveDevice).toHaveBeenCalledWith(expect.anything(), SDK, '192.168.1.50');
+    expect(resolveDevice).toHaveBeenCalledWith('192.168.1.50');
     expect(packageSteps).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ log: null, target: { arch: 'armv7l', platformVersion: '9.0' } }),
@@ -117,18 +118,13 @@ describe('rn-tizen run', () => {
     await runCommand.run(['--log-host', '10.0.0.2'], context);
 
     expect(listenForLogs).toHaveBeenCalledWith(8099, expect.anything(), { peer: '192.168.1.50' });
-    expect(installPackage).toHaveBeenCalledWith(
+    expect(installApp).toHaveBeenCalledWith(
       expect.anything(),
-      SDK,
-      TV.serial,
+      TV,
       import.meta.filename,
-    );
-    expect(launchPackage).toHaveBeenCalledWith(
-      expect.anything(),
-      SDK,
-      TV.serial,
       'org.example.demo',
     );
+    expect(launchApp).toHaveBeenCalledWith(TV, 'org.example.demo');
     expect(server.close).toHaveBeenCalled();
   });
 
@@ -137,7 +133,7 @@ describe('rn-tizen run', () => {
     await runCommand.run(['--release'], context);
 
     expect(listenForLogs).not.toHaveBeenCalled();
-    expect(launchPackage).toHaveBeenCalledTimes(2);
+    expect(launchApp).toHaveBeenCalledTimes(2);
   });
 
   it('closes the log server when the build fails', async () => {

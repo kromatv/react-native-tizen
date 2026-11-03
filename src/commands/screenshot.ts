@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import { captureScreen } from '../capture/capture-screen.ts';
 import { encodePng } from '../capture/png.ts';
 import { COMMON_OPTIONS, parseCommandArgs, type Command } from '../cli/command.ts';

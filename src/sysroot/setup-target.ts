@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import { RUNTIME_DIR } from '../package-paths.ts';
 import { buildCMakeProject, sourcesKey, tizenDefinitions } from '../runtime/cmake.ts';
 import type { Task } from '../task.ts';

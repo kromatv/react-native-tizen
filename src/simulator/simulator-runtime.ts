@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AppProject } from '../app/app-project.ts';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import { bundledImplementations } from '../libraries/bundled-implementations.ts';
 import { findNativeLibraries } from '../libraries/find-native-libraries.ts';
 import { prepareNativeLibraries } from '../libraries/prepare-native-libraries.ts';

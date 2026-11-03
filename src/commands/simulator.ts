@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { z } from 'zod';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import {
   COMMON_OPTIONS,
   ENTRY_OPTIONS,

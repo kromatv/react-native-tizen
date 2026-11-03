@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { FixableError } from '../errors.ts';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import type { Task } from '../task.ts';
 import { archiveFileName, pinnedDependency } from './dependencies.ts';
 import { downloadVerified } from './download.ts';

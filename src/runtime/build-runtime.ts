@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AppPackages, ResolvedPackage } from '../app/app-packages.ts';
 import { FixableError } from '../errors.ts';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import { generateReactNativeSpecs } from '../codegen/react-native-specs.ts';
 import { RUNTIME_DIR } from '../package-paths.ts';
 import { stampAt } from '../stamp.ts';

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import type { AppProject } from '../app/app-project.ts';
 import { UsageError } from '../cli/command.ts';
 import { FixableError } from '../errors.ts';
-import { cacheDir } from '../user-dirs.ts';
+import { cacheDir } from '../cache-dir.ts';
 import { findNativeLibraries } from '../libraries/find-native-libraries.ts';
 import { PACKAGE_ROOT } from '../package-paths.ts';
 import type { Task } from '../task.ts';
