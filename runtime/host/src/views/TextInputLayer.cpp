@@ -118,7 +118,7 @@ void TextInputLayer::layout(const PixelRect &box, Evas_Coord caretWidth) {
     scrollY_ = 0;
     scrollX_ = scrolledToShow(scrollX_, x, caretWidth_, box.width, textWidth_ + caretWidth_);
   }
-  evas_object_move(text_, box.x - scrollX_, box.y + offsetY - scrollY_);
+  setGeometry(text_, {.x = box.x - scrollX_, .y = box.y + offsetY - scrollY_, .width = textWidth_, .height = textHeight_});
   placeCaret();
 }
 

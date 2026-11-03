@@ -1,4 +1,4 @@
-#include "ViewBox.h"
+#include "SvgViewBox.h"
 
 #include <algorithm>
 
@@ -16,11 +16,11 @@ bool contains(const std::string &text, const char *part) {
 
 } // namespace
 
-bool ViewBox::present() const {
+bool SvgViewBox::present() const {
   return !align.empty() && width > 0 && height > 0;
 }
 
-Affine viewBoxTransform(const ViewBox &viewBox, double width, double height) {
+Affine viewBoxTransform(const SvgViewBox &viewBox, double width, double height) {
   if (!viewBox.present()) return {};
   double scaleX = width / viewBox.width;
   double scaleY = height / viewBox.height;

@@ -3,7 +3,7 @@
 #include "../views/ComponentView.h"
 #include "SvgCanvas.h"
 #include "SvgNodeView.h"
-#include "ViewBox.h"
+#include "SvgViewBox.h"
 
 #include <Ecore.h>
 
@@ -47,7 +47,7 @@ class SvgView : public ComponentView {
   void redraw();
 
   SvgCanvas canvas_;
-  ViewBox viewBox_;
+  SvgViewBox viewBox_;
   Rgba color_;
   Ecore_Job *job_{nullptr};
   PixelRect painted_;

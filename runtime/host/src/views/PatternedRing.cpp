@@ -1,9 +1,12 @@
 #include "PatternedRing.h"
 
+#include "PatchCache.h"
+#include "Premultiplied.h"
+#include "RoundedRect.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <map>
 #include <numbers>
 
 namespace rntizen {
@@ -12,10 +15,7 @@ namespace {
 
 constexpr int kMaxSide = 2048;
 constexpr int kSamples = 4;
-constexpr std::size_t kCacheBytes = 8 << 20;
 constexpr float kPi = std::numbers::pi_v<float>;
-
-using Key = std::array<int, 15>;
 
 struct Arc {
   float cx;
@@ -112,10 +112,6 @@ class Outline {
   float total_{0};
 };
 
-CornerRadius inner(const CornerRadius &r, int dx, int dy) {
-  return {std::max(0, r.x - dx), std::max(0, r.y - dy)};
-}
-
 NinePatch paint(const Corners &c, const Edges &w, int width, int height, StrokePattern pattern) {
   const Outline outline(c, w, static_cast<float>(width), static_cast<float>(height));
   const auto thickness = static_cast<float>(std::max({w.left, w.top, w.right, w.bottom}));
@@ -132,16 +128,18 @@ NinePatch paint(const Corners &c, const Edges &w, int width, int height, StrokeP
     gap = bestGap(total, dash, gap);
   }
   const auto period = dash + gap;
-  const Corners hole{inner(c.topLeft, w.left, w.top), inner(c.topRight, w.right, w.top),
-                     inner(c.bottomRight, w.right, w.bottom), inner(c.bottomLeft, w.left, w.bottom)};
   const auto fw = static_cast<float>(width);
   const auto fh = static_cast<float>(height);
+  const RoundedRect outer{.width = fw, .height = fh, .corners = c};
+  const RoundedRect hole{
+      .x = static_cast<float>(w.left),
+      .y = static_cast<float>(w.top),
+      .width = fw - static_cast<float>(w.left + w.right),
+      .height = fh - static_cast<float>(w.top + w.bottom),
+      .corners = c.inset(w),
+  };
   auto shown = [&](float x, float y) {
-    if (!insideRounded(c, 0, 0, fw, fh, x, y)) return false;
-    if (insideRounded(hole, static_cast<float>(w.left), static_cast<float>(w.top),
-                      fw - static_cast<float>(w.left + w.right), fh - static_cast<float>(w.top + w.bottom), x, y)) {
-      return false;
-    }
+    if (!outer.contains(x, y) || hole.contains(x, y)) return false;
     const auto [s, off] = outline.locate(x, y);
     if (!dotted) return std::fmod(s + dash / 2, period) < dash;
     const auto along = std::min(std::fmod(s, period), period - std::fmod(s, period));
@@ -165,8 +163,7 @@ NinePatch paint(const Corners &c, const Edges &w, int width, int height, StrokeP
               : 0;
         }
       }
-      const auto a = static_cast<std::uint32_t>(std::lround(255.0f * static_cast<float>(hits) / (kSamples * kSamples)));
-      patch.pixels[static_cast<std::size_t>(y * width + x)] = a << 24 | a << 16 | a << 8 | a;
+      patch.pixels[static_cast<std::size_t>(y * width + x)] = alphaPixel(static_cast<float>(hits) / (kSamples * kSamples));
     }
   }
   return patch;
@@ -181,22 +178,11 @@ const NinePatch *patternedRingPatch(
     int height,
     StrokePattern pattern) {
   if (pattern == StrokePattern::Solid || width <= 0 || height <= 0 || width > kMaxSide || height > kMaxSide) return nullptr;
-  static std::map<Key, NinePatch> cache;
-  static std::size_t bytes = 0;
-  const auto &c = corners;
-  const Key key{static_cast<int>(pattern), width, height, c.topLeft.x, c.topLeft.y, c.topRight.x, c.topRight.y,
-                c.bottomRight.x, c.bottomRight.y, c.bottomLeft.x, c.bottomLeft.y, widths.left, widths.top,
-                widths.right, widths.bottom};
-  if (auto found = cache.find(key); found != cache.end()) return found->second.pixels.empty() ? nullptr : &found->second;
-  auto patch = paint(corners, widths, width, height, pattern);
-  const auto size = patch.pixels.size() * sizeof(std::uint32_t);
-  if (bytes + size > kCacheBytes) {
-    cache.clear();
-    bytes = 0;
-  }
-  bytes += size;
-  const auto &stored = cache.emplace(key, std::move(patch)).first->second;
-  return stored.pixels.empty() ? nullptr : &stored;
+  auto key = patchKey(PatchKind::PatternedRing, corners);
+  appendEdges(key, widths);
+  key.insert(key.end(), {static_cast<float>(pattern), static_cast<float>(width), static_cast<float>(height)});
+  const auto &patch = cachedPatch(key, [&] { return paint(corners, widths, width, height, pattern); });
+  return patch.pixels.empty() ? nullptr : &patch;
 }
 
 } // namespace rntizen

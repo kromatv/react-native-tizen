@@ -70,15 +70,6 @@ void copyAttribute(Paint &to, const Paint &from, PaintAttribute attribute) {
   }
 }
 
-Rgba rgbaFromArgb(std::uint32_t argb) {
-  return {
-      .red = static_cast<double>((argb >> 16) & 0xff) / 255,
-      .green = static_cast<double>((argb >> 8) & 0xff) / 255,
-      .blue = static_cast<double>(argb & 0xff) / 255,
-      .alpha = static_cast<double>((argb >> 24) & 0xff) / 255,
-  };
-}
-
 std::optional<Rgba> rgbaFromNumber(const folly::dynamic &value) {
   if (!value.isNumber()) return std::nullopt;
   return rgbaFromArgb(static_cast<std::uint32_t>(static_cast<std::int64_t>(value.asDouble())));
@@ -154,6 +145,15 @@ std::optional<Length> lengthFromProp(const folly::dynamic &value) {
   if (value.isNumber()) return Length{.value = value.asDouble()};
   if (value.isString()) return lengthFromString(value.getString());
   return std::nullopt;
+}
+
+Rgba rgbaFromArgb(std::uint32_t argb) {
+  return {
+      .red = static_cast<double>((argb >> 16) & 0xff) / 255,
+      .green = static_cast<double>((argb >> 8) & 0xff) / 255,
+      .blue = static_cast<double>(argb & 0xff) / 255,
+      .alpha = static_cast<double>((argb >> 24) & 0xff) / 255,
+  };
 }
 
 std::optional<Rgba> rgbaFromColor(const facebook::react::SharedColor &color) {

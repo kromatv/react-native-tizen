@@ -11,8 +11,8 @@ using namespace facebook::react;
 namespace {
 
 constexpr Float kCaretWidth = 2;
-constexpr char32_t kPasswordDot = U'•';
-constexpr const char *kEmptyLine = "​";
+constexpr char32_t kPasswordDot = U'\u2022';
+constexpr const char *kEmptyLine = "\u200b";
 constexpr int kUnset = -1;
 
 } // namespace

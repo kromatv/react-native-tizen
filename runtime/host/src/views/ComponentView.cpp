@@ -239,7 +239,8 @@ void ComponentView::hangChild(const ComponentView &child) const {
 }
 
 void ComponentView::stackChild(std::size_t index) {
-  Evas_Object *below = contents_.empty() ? box_.topBelowContent() : contents_.back();
+  const auto underneath = contents_.empty() ? box_.objectsBelowContent() : contents_;
+  Evas_Object *below = underneath.empty() ? nullptr : underneath.back();
   for (auto i = index; i > 0; --i) {
     if (!children_[i - 1]->isOverlay()) {
       below = children_[i - 1]->root_;

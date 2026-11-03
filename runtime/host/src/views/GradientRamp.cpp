@@ -92,12 +92,8 @@ bool GradientRamp::empty() const {
 }
 
 Premultiplied GradientRamp::at(float t) const {
-  if (t <= stops_.front().position) return stops_.front().color;
-  if (t >= stops_.back().position) return stops_.back().color;
-  const auto upper = std::upper_bound(stops_.begin(), stops_.end(), t, [](float value, const Stop &stop) {
-    return value < stop.position;
-  });
-  return between(*(upper - 1), *upper, t);
+  std::size_t segment = 0;
+  return at(t, segment);
 }
 
 Premultiplied GradientRamp::at(float t, std::size_t &segment) const {
@@ -118,14 +114,6 @@ Premultiplied GradientRamp::between(const Stop &from, const Stop &to, float t) c
   Premultiplied color{};
   for (std::size_t c = 0; c < color.size(); ++c) color[c] = from.color[c] + (to.color[c] - from.color[c]) * weight;
   return color;
-}
-
-std::uint32_t byteOf(float unit) {
-  return static_cast<std::uint32_t>(static_cast<double>(std::clamp(unit, 0.0f, 1.0f) * 255) + 0.5);
-}
-
-std::uint32_t pixelOf(const Premultiplied &color) {
-  return byteOf(color[3]) << 24 | byteOf(color[0]) << 16 | byteOf(color[1]) << 8 | byteOf(color[2]);
 }
 
 } // namespace rntizen
