@@ -78,7 +78,7 @@ std::optional<std::string> uuidV5(std::string_view name, std::string_view namesp
   if (!space.has_value()) return std::nullopt;
   std::string input;
   input.reserve(space->size() + name.size());
-  std::ranges::transform(*space, std::back_inserter(input), [](std::byte byte) { return static_cast<char>(byte); });
+  std::ranges::transform(*space, std::back_inserter(input), [](std::byte byte) { return std::to_integer<char>(byte); });
   input += name;
   const auto digest = sha1(input);
   UuidBytes bytes{};

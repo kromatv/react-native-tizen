@@ -7,8 +7,6 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <optional>
-#include <stop_token>
 #include <string>
 #include <thread>
 #include <vector>
@@ -19,7 +17,8 @@ namespace {
 
 constexpr int kThreadCount = 3;
 
-void runLogged(const std::function<void()> &task) {
+template <typename Task>
+void runLogged(Task &task) {
   try {
     task();
   } catch (const std::exception &error) {
@@ -32,7 +31,7 @@ class WorkQueue final {
   WorkQueue() {
     workers_.reserve(kThreadCount);
     for (int index = 0; index < kThreadCount; ++index) {
-      workers_.emplace_back([this](const std::stop_token &stop) { run(stop); });
+      workers_.emplace_back([this] { run(); });
     }
   }
 
@@ -45,22 +44,23 @@ class WorkQueue final {
   }
 
  private:
-  void run(const std::stop_token &stop) {
-    while (!stop.stop_requested()) {
-      if (auto task = next(stop); task.has_value()) runLogged(*task);
+  [[noreturn]] void run() {
+    while (true) {
+      auto task = next();
+      runLogged(task);
     }
   }
 
-  std::optional<std::function<void()>> next(const std::stop_token &stop) {
+  std::function<void()> next() {
     std::unique_lock lock(mutex_);
-    if (!wake_.wait(lock, stop, [this] { return !tasks_.empty(); })) return std::nullopt;
+    wake_.wait(lock, [this] { return !tasks_.empty(); });
     auto task = std::move(tasks_.front());
     tasks_.pop_front();
     return task;
   }
 
   std::mutex mutex_;
-  std::condition_variable_any wake_;
+  std::condition_variable wake_;
   std::deque<std::function<void()>> tasks_;
   std::vector<std::jthread> workers_;
 };

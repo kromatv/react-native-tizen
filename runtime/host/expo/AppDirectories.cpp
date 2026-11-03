@@ -37,8 +37,7 @@ const std::string &fallbackDirectory() {
 }
 
 std::string writablePath(char *path, const char *fallback) {
-  auto result = takePath(path);
-  if (!result.empty() || fallbackDirectory().empty()) return result;
+  if (auto result = takePath(path); !result.empty() || fallbackDirectory().empty()) return result;
   return withTrailingSlash(fallbackDirectory() + fallback);
 }
 
