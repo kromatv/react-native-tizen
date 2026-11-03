@@ -22,7 +22,17 @@ export interface ScanOptions {
   /** Probe these addresses only, instead of the local networks. */
   readonly hosts?: readonly string[];
   readonly onProgress?: (done: number, total: number) => void;
+  /** The ports a TV answers on, Samsung's REST API and sdb unless a test says otherwise. */
+  readonly ports?: ScanPorts;
+  readonly ssdpWindowMs?: number;
 }
+
+interface ScanPorts {
+  readonly api: number;
+  readonly sdb: number;
+}
+
+const DEFAULT_PORTS: ScanPorts = { api: SAMSUNG_API_PORT, sdb: SDB_PORT };
 
 const CONNECT_TIMEOUT_MS = 500;
 const CONCURRENCY = 64;
@@ -37,9 +47,13 @@ export async function sweepTargets(): Promise<string[]> {
   return [...new Set([...recent, ...rest])];
 }
 
-async function identify(host: string, reply: SsdpReply | undefined): Promise<FoundTv | null> {
-  if (await tcpOpen(host, SAMSUNG_API_PORT, CONNECT_TIMEOUT_MS)) {
-    const device = await fetchApiDevice(host);
+async function identify(
+  host: string,
+  reply: SsdpReply | undefined,
+  ports: ScanPorts,
+): Promise<FoundTv | null> {
+  if (await tcpOpen(host, ports.api, CONNECT_TIMEOUT_MS)) {
+    const device = await fetchApiDevice(host, ports.api);
     if (device !== null) {
       return {
         host,
@@ -47,7 +61,7 @@ async function identify(host: string, reply: SsdpReply | undefined): Promise<Fou
         model: device.modelName,
         developerMode: device.developerMode,
         developerIp: device.developerIp,
-        sdbPort: SDB_PORT,
+        sdbPort: ports.sdb,
       };
     }
   }
@@ -59,11 +73,18 @@ async function identify(host: string, reply: SsdpReply | undefined): Promise<Fou
       model: description.modelName,
       developerMode: null,
       developerIp: null,
-      sdbPort: SDB_PORT,
+      sdbPort: ports.sdb,
     };
   }
-  if (await tcpOpen(host, SDB_PORT, CONNECT_TIMEOUT_MS)) {
-    return { host, name: '', model: '', developerMode: true, developerIp: null, sdbPort: SDB_PORT };
+  if (await tcpOpen(host, ports.sdb, CONNECT_TIMEOUT_MS)) {
+    return {
+      host,
+      name: '',
+      model: '',
+      developerMode: true,
+      developerIp: null,
+      sdbPort: ports.sdb,
+    };
   }
   return null;
 }
@@ -74,12 +95,13 @@ async function identify(host: string, reply: SsdpReply | undefined): Promise<Fou
  * description, or the sdb port.
  */
 export async function scanForTvs(options: ScanOptions = {}): Promise<FoundTv[]> {
-  const searching = ssdpSearch(SSDP_WINDOW_MS);
+  const ports = options.ports ?? DEFAULT_PORTS;
+  const searching = ssdpSearch(options.ssdpWindowMs ?? SSDP_WINDOW_MS);
   const targets = options.hosts === undefined ? await sweepTargets() : [...options.hosts];
   let done = 0;
   const swept = await mapPool(targets, CONCURRENCY, async (host) => {
-    const open = await tcpOpen(host, SAMSUNG_API_PORT, CONNECT_TIMEOUT_MS);
-    const sdb = open ? false : await tcpOpen(host, SDB_PORT, CONNECT_TIMEOUT_MS);
+    const open = await tcpOpen(host, ports.api, CONNECT_TIMEOUT_MS);
+    const sdb = open ? false : await tcpOpen(host, ports.sdb, CONNECT_TIMEOUT_MS);
     options.onProgress?.(++done, targets.length);
     return open || sdb ? host : null;
   });
@@ -91,7 +113,9 @@ export async function scanForTvs(options: ScanOptions = {}): Promise<FoundTv[]> 
   const candidates = new Set([...swept.filter((host) => host !== null), ...replies.keys()]);
   if (options.hosts !== undefined)
     for (const host of candidates) if (!options.hosts.includes(host)) candidates.delete(host);
-  const found = await mapPool([...candidates], 8, (host) => identify(host, replies.get(host)));
+  const found = await mapPool([...candidates], 8, (host) =>
+    identify(host, replies.get(host), ports),
+  );
   return found
     .filter((tv) => tv !== null)
     .sort((left, right) => compareHosts(left.host, right.host));

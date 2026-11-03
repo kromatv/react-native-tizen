@@ -5,7 +5,10 @@ import { profilePassword } from './profile-password.ts';
 const KEYCHAIN_SERVICE = 'certificate-manager';
 const SECURITY = '/usr/bin/security';
 
-const quoted = (text: string) => `"${text.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+function quoted(text: string): string {
+  const escaped = text.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`);
+  return `"${escaped}"`;
+}
 
 function addToKeychain(account: string, password: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -31,10 +34,14 @@ function addToKeychain(account: string, password: string): Promise<void> {
  * the login keychain under the `.pwd` path, elsewhere in that file, readable
  * by its owner only. The password goes to `security` over stdin, not argv.
  */
-export async function storePassword(pwdPath: string, password: string): Promise<void> {
-  if (process.platform === 'darwin') await addToKeychain(pwdPath, password);
+export async function storePassword(
+  pwdPath: string,
+  password: string,
+  platform: NodeJS.Platform = process.platform,
+): Promise<void> {
+  if (platform === 'darwin') await addToKeychain(pwdPath, password);
   else await writeFile(pwdPath, password, { mode: 0o600 });
-  if ((await profilePassword(pwdPath)) !== password) {
+  if ((await profilePassword(pwdPath, platform)) !== password) {
     throw new Error(`The password stored for ${pwdPath} does not read back`);
   }
 }

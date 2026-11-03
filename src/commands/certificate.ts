@@ -56,6 +56,11 @@ function nameFrom(invocation: Invocation, action: string): string {
   return name;
 }
 
+/** Where Tizen Studio's Certificate Manager keeps Samsung's certificates, one directory per profile. */
+function samsungCertificatesDir(env: NodeJS.ProcessEnv = process.env): string {
+  return join(env.HOME ?? homedir(), 'SamsungCertificate');
+}
+
 function refuseExisting(directory: string): void {
   if (!existsSync(directory)) return;
   throw new FixableError(
@@ -126,7 +131,7 @@ async function importProfile(invocation: Invocation): Promise<void> {
   if (author === undefined || distributor === undefined) {
     throw new UsageError('certificate import needs --author and --distributor', 'certificate');
   }
-  const directory = join(homedir(), 'SamsungCertificate', name);
+  const directory = join(samsungCertificatesDir(), name);
   refuseExisting(directory);
   const { reporter, context } = invocation;
   const given = {

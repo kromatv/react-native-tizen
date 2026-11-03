@@ -47,7 +47,10 @@ export function parseApiDevice(json: z.infer<typeof apiSchema>): SamsungApiDevic
 }
 
 /** Asks the TV at `host` what it is, or null when nothing Samsung answers there. */
-export async function fetchApiDevice(host: string): Promise<SamsungApiDevice | null> {
-  const json = await fetchJson(`http://${host}:${SAMSUNG_API_PORT}/api/v2/`, apiSchema);
+export async function fetchApiDevice(
+  host: string,
+  port = SAMSUNG_API_PORT,
+): Promise<SamsungApiDevice | null> {
+  const json = await fetchJson(`http://${host}:${port}/api/v2/`, apiSchema);
   return json === null ? null : parseApiDevice(json);
 }
