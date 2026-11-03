@@ -1,6 +1,6 @@
+#include "MainLoop.test.h"
 #include "MainThread.h"
 
-#include <Ecore.h>
 #include <doctest/doctest.h>
 
 #include <atomic>
@@ -14,28 +14,12 @@ namespace rntizen {
 namespace {
 
 using namespace std::chrono_literals;
-
-class MainLoop final {
- public:
-  MainLoop() { ecore_init(); }
-  ~MainLoop() { ecore_shutdown(); }
-
-  MainLoop(const MainLoop &) = delete;
-  MainLoop &operator=(const MainLoop &) = delete;
-
-  void runUntil(const std::atomic<bool> &done) const {
-    const auto giveUp = std::chrono::steady_clock::now() + 5s;
-    while (!done && std::chrono::steady_clock::now() < giveUp) {
-      ecore_main_loop_iterate();
-      std::this_thread::sleep_for(1ms);
-    }
-  }
-};
+using testing::MainLoopScope;
 
 } // namespace
 
 TEST_CASE("runOnMainThreadSync runs a worker's task on the main loop and waits for it") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   std::atomic<bool> done{false};
   bool ranOnMain = false;
   bool ran = false;
@@ -52,7 +36,7 @@ TEST_CASE("runOnMainThreadSync runs a worker's task on the main loop and waits f
 }
 
 TEST_CASE("runOnMainThreadSync rethrows on the worker what the task throws") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   std::atomic<bool> done{false};
   bool threw = false;
 
@@ -71,7 +55,7 @@ TEST_CASE("runOnMainThreadSync rethrows on the worker what the task throws") {
 }
 
 TEST_CASE("a main-loop task that throws is logged and the loop runs the next one") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   std::atomic<bool> done{false};
 
   runOnMainThread([] { throw std::runtime_error("boom"); });
@@ -83,7 +67,7 @@ TEST_CASE("a main-loop task that throws is logged and the loop runs the next one
 }
 
 TEST_CASE("runOnMainThreadSync runs inline on the main thread") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   bool ran = false;
 
   CHECK(runOnMainThreadSync([&ran] { ran = true; }));
@@ -92,7 +76,7 @@ TEST_CASE("runOnMainThreadSync runs inline on the main thread") {
 }
 
 TEST_CASE("runOnMainThreadSync refuses work while the main loop is closing") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   closeMainThreadSync();
   bool ran = false;
   bool accepted = true;
@@ -106,7 +90,7 @@ TEST_CASE("runOnMainThreadSync refuses work while the main loop is closing") {
 }
 
 TEST_CASE("runOnMainThreadSoon tasks run at the next runPriorityTasks, in order") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   std::vector<int> order;
   std::atomic<int> finished{0};
   std::atomic<bool> done{false};
@@ -130,7 +114,7 @@ TEST_CASE("runOnMainThreadSoon tasks run at the next runPriorityTasks, in order"
 }
 
 TEST_CASE("mainThreadWaitTime adds up how long workers waited while measured") {
-  const MainLoop loop;
+  const MainLoopScope loop;
   std::atomic<bool> done{false};
   setMainThreadWaitMeasured(true);
   const auto before = mainThreadWaitTime();

@@ -1,3 +1,4 @@
+#include "../threading/MainLoop.test.h"
 #include "ThreadTimerRegistry.h"
 
 #include <Ecore.h>
@@ -16,7 +17,6 @@ using namespace std::chrono_literals;
 
 struct Timers {
   Timers() {
-    ecore_init();
     auto owned = std::make_unique<ThreadTimerRegistry>();
     registry = owned.get();
     manager = std::make_shared<facebook::react::TimerManager>(std::move(owned));
@@ -24,10 +24,7 @@ struct Timers {
     manager->setRuntimeExecutor([this](std::function<void(facebook::jsi::Runtime &)> &&) { ++calls; });
   }
 
-  ~Timers() {
-    manager.reset();
-    ecore_shutdown();
-  }
+  ~Timers() { manager.reset(); }
 
   Timers(const Timers &) = delete;
   Timers &operator=(const Timers &) = delete;
@@ -41,6 +38,7 @@ struct Timers {
     return calls == count;
   }
 
+  testing::MainLoopScope loop;
   std::atomic<int> calls{0};
   ThreadTimerRegistry *registry{nullptr};
   std::shared_ptr<facebook::react::TimerManager> manager;
