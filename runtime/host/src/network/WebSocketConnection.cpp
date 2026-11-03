@@ -232,19 +232,20 @@ void WebSocketConnection::queueCommands(Session &session, std::optional<Closing>
 }
 
 bool WebSocketConnection::readFrames(Session &session, Incoming &incoming, const std::optional<Closing> &closing) const {
+  using enum WebSocketOpcode;
   while (auto frame = takeWebSocketFrame(incoming.inbox, kMaxMessageBytes)) {
     switch (frame->opcode) {
-      case WebSocketOpcode::Close:
+      case Close:
         onServerClose(session, *frame, closing);
         return true;
-      case WebSocketOpcode::Ping:
-        if (!closing.has_value()) session.queue(WebSocketOpcode::Pong, frame->payload);
+      case Ping:
+        if (!closing.has_value()) session.queue(Pong, frame->payload);
         break;
-      case WebSocketOpcode::Pong:
+      case Pong:
         break;
-      case WebSocketOpcode::Text:
-      case WebSocketOpcode::Binary:
-      case WebSocketOpcode::Continuation:
+      case Text:
+      case Binary:
+      case Continuation:
         onMessageFrame(incoming, *frame);
         break;
     }
