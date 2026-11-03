@@ -162,8 +162,8 @@ BackHandler.addEventListener('hardwareBackPress', () => {
 
 Store review: Samsung documents the personal preview for web apps only. A .NET
 app publishes through `ContentDBAPI`, an unpublished class in the TV's
-framework, or through the message port Samsung's web plugin uses. Ask your
-Seller Office content manager before shipping.
+framework, or through an undocumented message port of Samsung's content
+service. Ask your Seller Office content manager before shipping.
 
 ## Background audio
 
