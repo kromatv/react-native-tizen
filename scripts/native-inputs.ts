@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 
-const ENTRY = 'scripts/compile-simulator-runtime.ts';
+const ENTRIES = ['scripts/compile-simulator-runtime.ts', 'scripts/test-runtime.ts'];
 const NATIVE_ROOTS = [
   'runtime/',
   'simulator/',
@@ -17,9 +17,9 @@ const NATIVE_ROOTS = [
 ];
 const RELATIVE_IMPORT = /(?:from |import\(|import )['"](\.\.?\/[^'"]+)['"]/g;
 
-function importClosure(entry: string): Set<string> {
+function importClosure(entries: readonly string[]): Set<string> {
   const seen = new Set<string>();
-  const pending = [entry];
+  const pending = [...entries];
   while (pending.length > 0) {
     const file = pending.pop();
     if (file === undefined || seen.has(file) || !existsSync(file)) continue;
@@ -36,7 +36,7 @@ const changed = readFileSync(0, 'utf8')
   .split('\n')
   .map((line) => line.trim())
   .filter((line) => line !== '');
-const inputs = importClosure(ENTRY);
+const inputs = importClosure(ENTRIES);
 const touched = changed.filter(
   (file) => inputs.has(file) || NATIVE_ROOTS.some((root) => file.startsWith(root)),
 );
