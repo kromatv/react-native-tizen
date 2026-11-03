@@ -31,6 +31,9 @@ class ControlLink final {
 
  private:
   void run();
+  bool adopt(int socket);
+  void forget();
+  void waitToReconnect();
   void serve(int socket);
   bool answer(int socket, const std::string &line);
   std::variant<ScreenCapture, std::string> capture();

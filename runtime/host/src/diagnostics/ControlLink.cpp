@@ -12,6 +12,7 @@
 
 #include <array>
 #include <cerrno>
+#include <stdexcept>
 #include <chrono>
 #include <format>
 #include <future>
@@ -37,7 +38,9 @@ bool sendLine(int socket, const folly::dynamic &message) {
 folly::dynamic parseRequest(const std::string &line) {
   try {
     return folly::parseJson(line);
-  } catch (const std::runtime_error &) {
+  } catch (const folly::json::parse_error &) {
+    return nullptr;
+  } catch (const std::range_error &) {
     return nullptr;
   }
 }
@@ -97,23 +100,30 @@ bool ControlLink::isStopping() {
 void ControlLink::run() {
   while (!isStopping()) {
     if (const int socket = connectTcp(host_, port_, kConnectTimeout, [this] { return isStopping(); }); socket >= 0) {
-      bool adopted = false;
-      {
-        std::lock_guard lock(mutex_);
-        adopted = !stopping_;
-        if (adopted) socket_ = socket;
-      }
-      if (adopted && sendLine(socket, folly::dynamic::object("type", "control")("version", 1))) serve(socket);
+      if (adopt(socket) && sendLine(socket, folly::dynamic::object("type", "control")("version", 1))) serve(socket);
       perfRequested_.store(false, std::memory_order_relaxed);
-      {
-        std::lock_guard lock(mutex_);
-        socket_ = -1;
-      }
+      forget();
       close(socket);
     }
-    std::unique_lock lock(mutex_);
-    wake_.wait_for(lock, kReconnectDelay, [this] { return stopping_; });
+    waitToReconnect();
   }
+}
+
+bool ControlLink::adopt(int socket) {
+  std::lock_guard lock(mutex_);
+  if (stopping_) return false;
+  socket_ = socket;
+  return true;
+}
+
+void ControlLink::forget() {
+  std::lock_guard lock(mutex_);
+  socket_ = -1;
+}
+
+void ControlLink::waitToReconnect() {
+  std::unique_lock lock(mutex_);
+  wake_.wait_for(lock, kReconnectDelay, [this] { return stopping_; });
 }
 
 void ControlLink::serve(int socket) {

@@ -83,7 +83,7 @@ TEST_CASE("ControlLink greets the listener and takes perf requests until they st
 
     const auto hello = folly::parseJson(readLine(client));
     sendText(client, "not json\n{\"type\":\"perf\",");
-    sendText(client, "\"on\":true}\n");
+    sendText(client, "\"on\":true}\n{\"type\":\"screenshot\",\"id\":99999999999999999999}\n");
     const bool turnedOn = waitFor([&link] { return link.perfRequested(); });
     sendText(client, "[]\n{\"id\":1}\n{\"type\":5}\n{\"type\":\"other\"}\n{\"type\":\"screenshot\"}\n");
     sendText(client, "{\"type\":\"screenshot\",\"id\":\"7\"}\n{\"type\":\"screenshot\",\"id\":-1}\n");
