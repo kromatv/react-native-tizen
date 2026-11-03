@@ -10,12 +10,12 @@ const SIGNATURE_PROBLEM = /certificate|signature/i;
 export function installFailureReason(output: string): string {
   const reason = FAILURE_REASON.exec(output)?.[1]?.trim();
   if (reason !== undefined && reason !== '') return reason;
-  return (
-    output
-      .split(/\r?\n/)
-      .filter((line) => line.trim() !== '')
-      .at(-1) ?? 'no output'
-  );
+  const lines = output.split(/\r?\n/);
+  for (let index = lines.length - 1; index >= 0; index--) {
+    const line = lines[index]?.trim() ?? '';
+    if (line !== '') return line;
+  }
+  return 'no output';
 }
 
 async function signingHint(tv: SdbDevice): Promise<string> {

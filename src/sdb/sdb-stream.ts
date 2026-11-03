@@ -89,16 +89,16 @@ export class SdbStream {
 
   /** Sends `data` in packets as large as the TV takes, each acknowledged before the next. */
   async write(data: Buffer, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<void> {
-    for (let at = 0; at < data.length; at += this.transport.maxData) {
-      if (this.failure !== null) throw this.failure;
-      if (this.ended) throw new Error(`sdb: the TV closed ${this.service}`);
-      const acknowledged = new Promise<void>((resolve, reject) => {
-        this.acks.push({ resolve, reject });
-      });
-      const chunk = data.subarray(at, at + this.transport.maxData);
-      this.transport.send(SDB_COMMAND.WRTE, this.localId, this.remoteId, chunk);
-      await withDeadline(acknowledged, timeoutMs, `sdb: the TV stopped reading ${this.service}`);
-    }
+    if (data.length === 0) return;
+    if (this.failure !== null) throw this.failure;
+    if (this.ended) throw new Error(`sdb: the TV closed ${this.service}`);
+    const acknowledged = new Promise<void>((resolve, reject) => {
+      this.acks.push({ resolve, reject });
+    });
+    const chunk = data.subarray(0, this.transport.maxData);
+    this.transport.send(SDB_COMMAND.WRTE, this.localId, this.remoteId, chunk);
+    await withDeadline(acknowledged, timeoutMs, `sdb: the TV stopped reading ${this.service}`);
+    return this.write(data.subarray(chunk.length), timeoutMs);
   }
 
   /** The next payload the TV wrote, or null once it closed the stream. */
@@ -113,15 +113,23 @@ export class SdbStream {
     return withDeadline(next, timeoutMs, `sdb: ${this.service} went quiet`);
   }
 
+  /** Each payload the TV writes, until it closes the stream. */
+  chunks(timeoutMs = DEFAULT_TIMEOUT_MS): AsyncIterable<Buffer> {
+    return {
+      [Symbol.asyncIterator]: () => ({
+        next: async (): Promise<IteratorResult<Buffer, undefined>> => {
+          const chunk = await this.read(timeoutMs);
+          return chunk === null ? { done: true, value: undefined } : { done: false, value: chunk };
+        },
+      }),
+    };
+  }
+
   /** Everything the TV writes until it closes the stream, cut at `limit` bytes. */
   async drain(limit: number, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<Buffer> {
     const chunks: Buffer[] = [];
     let size = 0;
-    for (
-      let chunk = await this.read(timeoutMs);
-      chunk !== null;
-      chunk = await this.read(timeoutMs)
-    ) {
+    for await (const chunk of this.chunks(timeoutMs)) {
       chunks.push(chunk);
       size += chunk.length;
       if (size >= limit) break;

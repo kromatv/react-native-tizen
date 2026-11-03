@@ -48,8 +48,8 @@ export interface FakeTv {
 }
 
 interface FakeTvOptions {
-  /** `reset` drops every connection at once, as the TV does while another host holds it. */
-  readonly handshake?: 'banner' | 'reset';
+  /** `reset` drops every connection at once, as the TV does while another host holds it; `silent` never answers. */
+  readonly handshake?: 'banner' | 'reset' | 'silent';
   readonly services: Readonly<Record<string, ServiceHandler>>;
 }
 
@@ -78,6 +78,7 @@ export async function fakeTv({ handshake = 'banner', services }: FakeTvOptions):
     socket.on('data', (chunk) => {
       for (const packet of reader.push(chunk)) {
         packets.push(packet);
+        if (packet.command === SDB_COMMAND.CNXN && handshake === 'silent') continue;
         if (packet.command === SDB_COMMAND.CNXN) {
           send(SDB_COMMAND.CNXN, 0x02000000, TV_MAX_DATA, Buffer.from(`${TV_BANNER}\0`));
         } else if (packet.command === SDB_COMMAND.OPEN) {

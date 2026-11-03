@@ -20,11 +20,7 @@ export async function runShell(
   let output = '';
   let partial = '';
   try {
-    for (
-      let chunk = await stream.read(timeoutMs);
-      chunk !== null;
-      chunk = await stream.read(timeoutMs)
-    ) {
+    for await (const chunk of stream.chunks(timeoutMs)) {
       const text = chunk.subarray(0, Math.max(0, limit - output.length)).toString('utf8');
       output += text;
       const lines = (partial + text).split(/\r?\n/);

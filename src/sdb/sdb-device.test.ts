@@ -31,7 +31,7 @@ function answer(text: string): ServiceHandler {
   };
 }
 
-async function tv(services: Record<string, ServiceHandler>, handshake?: 'reset') {
+async function tv(services: Record<string, ServiceHandler>, handshake?: 'reset' | 'silent') {
   const started = await fakeTv({ services: { 'capability:': capability, ...services }, handshake });
   tvs.push(started);
   return started;
@@ -69,6 +69,16 @@ describe('openSdbDevice', () => {
 
     await expect(opening).rejects.toBeInstanceOf(SdbConnectError);
     await expect(opening).rejects.toMatchObject({ reason: 'refused' });
+  });
+
+  it('calls a TV that never sends its banner silent', async () => {
+    const started = await tv({}, 'silent');
+
+    await expect(
+      openSdbDevice({ host: '127.0.0.1', port: started.port }, 300),
+    ).rejects.toMatchObject({
+      reason: 'silent',
+    });
   });
 
   it('calls a port nobody listens on unreachable', async () => {
