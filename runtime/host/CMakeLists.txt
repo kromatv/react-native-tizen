@@ -59,5 +59,6 @@ if(RN_TIZEN_TESTS)
     SOURCES ${_host_test_sources}
     HOST rn_tizen_host
     ROOTS ${_react_native_roots}
-    TIZEN_LIBRARIES ${_tizen_libraries})
+    TIZEN_LIBRARIES ${_tizen_libraries}
+    INSTRUMENT react_renderer_textlayoutmanager hermesPlatformIntl_obj)
 endif()

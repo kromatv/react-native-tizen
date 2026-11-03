@@ -31,6 +31,8 @@ interface TestBuild {
   readonly hermesCompilers: string;
   readonly codegen: string;
   readonly reactNativeDir: string;
+  readonly expoModulesCoreDir: string;
+  readonly expoModulesJsiDir: string;
   readonly coverage: boolean;
 }
 
@@ -51,6 +53,8 @@ function definitions(build: TestBuild): string[] {
     `-DREACT_NATIVE_DIR=${build.reactNativeDir}`,
     `-DRN_TIZEN_CODEGEN_DIR=${build.codegen}`,
     `-DRN_TIZEN_HERMES_HOST_COMPILERS=${build.hermesCompilers}`,
+    `-DEXPO_MODULES_CORE_DIR=${build.expoModulesCoreDir}`,
+    `-DEXPO_MODULES_JSI_DIR=${build.expoModulesJsiDir}`,
   ];
 }
 
@@ -107,7 +111,7 @@ const { values, positionals } = parseArgs({
 });
 const app = loadAppProject(resolve(positionals[0] ?? 'example'));
 const reporter = new Reporter({ verbose: process.env.CI === 'true' });
-const { reactNative } = app.packages;
+const { reactNative, expoModulesCore, expoModulesJsi } = app.packages;
 const runtimeName = `${reactNative.name}-${reactNative.version}-simulator-${sourcesKey(RUNTIME_DIR, reactNative.dir)}`;
 const codegen = join(cacheDir(), 'runtime', runtimeName, 'codegen');
 const worktree = createHash('sha256').update(realpathSync(PACKAGE_ROOT)).digest('hex').slice(0, 12);
@@ -129,6 +133,8 @@ const build: TestBuild = {
   hermesCompilers: join(buildRoot, 'hermes-host', 'ImportHostCompilers.cmake'),
   codegen,
   reactNativeDir: realpathSync(reactNative.dir),
+  expoModulesCoreDir: realpathSync(expoModulesCore.dir),
+  expoModulesJsiDir: realpathSync(expoModulesJsi.dir),
   coverage: values.coverage !== undefined,
 };
 const report =

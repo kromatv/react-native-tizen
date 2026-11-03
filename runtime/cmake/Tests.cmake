@@ -3,7 +3,8 @@
 # so only a simulator build has them.
 #
 #   rn_tizen_add_host_tests(<target> SOURCES <test sources> HOST <object library>
-#     ROOTS <React Native libraries> TIZEN_LIBRARIES <Tizen native API libraries>)
+#     ROOTS <React Native libraries> TIZEN_LIBRARIES <Tizen native API libraries>
+#     INSTRUMENT <other targets compiling sources of runtime/>)
 
 if(NOT RN_TIZEN_SIMULATOR)
   message(FATAL_ERROR "RN_TIZEN_TESTS needs RN_TIZEN_SIMULATOR: the tests run on the machine that builds them.")
@@ -21,7 +22,7 @@ FetchContent_MakeAvailable(doctest)
 enable_testing()
 
 function(rn_tizen_add_host_tests target)
-  cmake_parse_arguments(PARSE_ARGV 1 _tests "" "HOST" "SOURCES;ROOTS;TIZEN_LIBRARIES")
+  cmake_parse_arguments(PARSE_ARGV 1 _tests "" "HOST" "SOURCES;ROOTS;TIZEN_LIBRARIES;INSTRUMENT")
 
   set(_host_archive ${_tests_HOST}_archive)
   add_library(${_host_archive} STATIC EXCLUDE_FROM_ALL $<TARGET_OBJECTS:${_tests_HOST}>)
@@ -41,7 +42,9 @@ function(rn_tizen_add_host_tests target)
 
   if(RN_TIZEN_COVERAGE)
     set(_instrument -fprofile-instr-generate -fcoverage-mapping)
-    target_compile_options(${_tests_HOST} PRIVATE ${_instrument})
+    foreach(_instrumented IN LISTS _tests_HOST _tests_INSTRUMENT)
+      target_compile_options(${_instrumented} PRIVATE ${_instrument})
+    endforeach()
     target_link_options(${target} PRIVATE -fprofile-instr-generate)
     target_link_options(react-native-tizen PRIVATE -fprofile-instr-generate)
   endif()
