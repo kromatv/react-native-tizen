@@ -73,7 +73,9 @@ Voice.setScreen('player'); // home, list, details, player, search, settings; nul
 ```
 
 While a `search` listener is registered the search URL is not opened; while a
-`command` listener is registered the player is not driven. `setScreen` tells
+`command` listener is registered the player is not driven. The logs name each
+command; what was said, a search or a title, shows only at `debug`
+(`rn-tizen run --level debug`). `setScreen` tells
 the assistant what is on screen before each utterance; the default is
 `player` while a video plays and `list` otherwise.
 
@@ -159,6 +161,13 @@ BackHandler.addEventListener('hardwareBackPress', () => {
   return true;
 });
 ```
+
+Treat what a tile delivers as untrusted input. Another app on the TV can send
+yours the app control a tile press sends, with a `PAYLOAD` of its choosing, so
+the URL `Linking` hands you and `launchedFromTile` say what the launch claims,
+not that Samsung's home bar made it. Route the URL like any deep link: accept
+your own scheme and the paths you expect, and never let it skip sign-in or a
+confirmation, or name a file or a server the app then loads.
 
 Store review: Samsung documents the personal preview for web apps only. A .NET
 app publishes through `ContentDBAPI`, an unpublished class in the TV's

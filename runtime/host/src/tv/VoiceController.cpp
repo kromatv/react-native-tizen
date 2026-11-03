@@ -81,7 +81,7 @@ bool VoiceController::select(const VoiceCommand &command) {
     if (position >= 0 && position < static_cast<int>(views.size())) target = &views[position];
   }
   if (target == nullptr) {
-    log(LogLevel::Info, "Voice: nothing on screen is labelled " + (command.title.empty() ? std::to_string(command.index) : command.title));
+    log(LogLevel::Debug, "Voice: nothing on screen is labelled " + (command.title.empty() ? std::to_string(command.index) : command.title));
     return false;
   }
   log(LogLevel::Info, "Voice: pressing \"" + target->label + "\"");
@@ -96,7 +96,7 @@ bool VoiceController::search(const VoiceCommand &command) {
   const auto &searchUrl = dependencies_.state->searchUrl();
   if (!searchUrl) return false;
   const auto url = fillSearchUrl(*searchUrl, command.search);
-  log(LogLevel::Info, "Voice: opening " + url);
+  log(LogLevel::Debug, "Voice: opening " + url);
   dependencies_.openUrl(url);
   return true;
 }

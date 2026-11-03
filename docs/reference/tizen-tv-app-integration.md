@@ -234,8 +234,8 @@ Voice:
     30 seconds", "go to one hour twenty", "select <title on screen>",
     "subtitles on": which hooks fire, on which thread, with which search fields.
     Run the example's platform screens (`src/screens/platform/main.ts`) and
-    read the `Voice:` log lines: the shell logs each command, its data and
-    the thread once.
+    read the `Voice:` log lines with `--level debug`: the shell logs each
+    command and the thread once at `info`, and the command's data at `debug`.
 11. Without the privileges: does the class's privilege check throw?
 12. From the home screen: "open KROMA", "play Blade Runner on KROMA".
 13. Does `XF86BTVoice` still reach the app while the assistant listens?

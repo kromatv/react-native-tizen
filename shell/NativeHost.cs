@@ -68,6 +68,8 @@ namespace ReactNativeTizen
             }
         }
 
+        internal static void Debug(string message) => rn_tizen_log(0, message);
+
         internal static void Info(string message) => rn_tizen_log(1, message);
 
         internal static void Warn(string message) => rn_tizen_log(2, message);

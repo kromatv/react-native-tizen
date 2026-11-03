@@ -137,7 +137,8 @@ namespace ReactNativeTizen
             }
             var json = VoiceCommands.ToJson(command, data);
             var handled = json != null && NativeHost.rn_tizen_host_voice_command(host, json) != 0;
-            NativeHost.Info("Voice: " + command + (data.Length > 0 ? " [" + data + "]" : "") + (handled ? " handled" : " left to the TV"));
+            NativeHost.Info("Voice: " + command + (handled ? " handled" : " left to the TV"));
+            if (data.Length > 0) NativeHost.Debug("Voice: " + command + " data: " + data);
             Send("result", handled ? "success" : "not_support");
         }
 
