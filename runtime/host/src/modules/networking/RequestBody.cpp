@@ -44,9 +44,10 @@ HeaderPairs partHeaders(Runtime &runtime, const Object &part) {
     throw RequestBodyError("Missing or invalid header format for FormData part.");
   }
   auto pairs = readHeaderPairs(runtime, headers.getObject(runtime).getArray(runtime));
-  const bool safe = std::ranges::all_of(
-      pairs, [](const auto &header) { return fitsInHeader(header.first) && fitsInHeader(header.second); });
-  if (!safe) throw RequestBodyError("Invalid header in FormData part.");
+  if (!std::ranges::all_of(
+          pairs, [](const auto &header) { return fitsInHeader(header.first) && fitsInHeader(header.second); })) {
+    throw RequestBodyError("Invalid header in FormData part.");
+  }
   return pairs;
 }
 
