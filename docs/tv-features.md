@@ -148,8 +148,10 @@ the last one wins.
 `setSource` names where the service app fetches tiles while the app is
 closed: a URL returning Samsung's preview JSON, which a server writes with
 `toSamsungPreview` from `@kromatv/react-native-tizen/preview-json` (no React
-Native import, so Node runs it). The service fetches when the app goes to the
-background and when Samsung starts it, at most once per `refreshMinutes`.
+Native import, so Node runs it). A source with `headers` must be `https`,
+since headers usually carry a credential: `setSource` throws otherwise. The
+service fetches when the app goes to the background and when Samsung starts
+it, at most once per `refreshMinutes`.
 
 Samsung asks that Back on the first screen exit with no confirmation after a
 tile launch, though its general guide asks for a confirmation otherwise:

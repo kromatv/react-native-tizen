@@ -49,7 +49,7 @@ Expo's own config loader). Only `package` is required.
 | `profile` | the active one | The Tizen Studio security profile that signs the package. |
 | `locales` | `["en"]` | The locales `Intl` formats in, as BCP 47 tags (`fr`, `pt-BR`). Each adds its ICU data (by language) to the package and FormatJS's data to the bundle; any other locale falls back to the device's, then to the first listed. |
 | `voice` | off | `true`, or `{ "searchUrl": "myapp://search?q={query}" }`: Samsung's voice assistant. See [tv-features.md](tv-features.md#voice). |
-| `preview` | off | `{ "endpoint": "<https URL>" }` for a public Smart Hub preview, `{ "refreshMinutes": 30 }` (10 or more) for a personal one the app publishes. See [tv-features.md](tv-features.md#smart-hub-preview). |
+| `preview` | off | `{ "endpoint": "<http or https URL>" }` for a public Smart Hub preview, `{ "refreshMinutes": 30 }` (10 or more) for a personal one the app publishes. See [tv-features.md](tv-features.md#smart-hub-preview). |
 | `resolution` | `1080p` | `4k` asks the window manager for a 3840x2160 UI plane on a 4K panel. See [tv-features.md](tv-features.md#4k-ui). |
 
 An unknown key is an error, so a typo does not pass silently. expo-video's

@@ -1,9 +1,10 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
 import { createPublishQueue, type PublishResult } from './publish-queue.ts';
 import { toSamsungPreview, type PreviewSection } from './preview-json.ts';
-import { z } from 'zod';
+import { parsePreviewSource, type PreviewSource } from './preview-source.ts';
 
 export type { PublishResult } from './publish-queue.ts';
+export type { PreviewSource } from './preview-source.ts';
 export {
   MAX_PREVIEW_TILES,
   PreviewValidationError,
@@ -13,25 +14,12 @@ export {
   type TileRatio,
 } from './preview-json.ts';
 
-/** Where the preview service fetches Samsung's preview JSON while the app is closed. */
-export interface PreviewSource {
-  readonly url: string;
-  readonly headers?: Readonly<Record<string, string>>;
-}
-
 interface NativePreview extends TurboModule {
   isAvailable(): boolean;
   launchedFromTile(): boolean;
   publish(json: string): Promise<string>;
   setSource(json: string | null): void;
 }
-
-const sourceSchema = z
-  .object({
-    url: z.url({ protocol: /^https?$/ }),
-    headers: z.record(z.string(), z.string()).optional(),
-  })
-  .strict();
 
 const native = TurboModuleRegistry.get<NativePreview>('RNTizenSmartHubPreview');
 
@@ -84,6 +72,6 @@ export const SmartHubPreview = {
    * JSON as `toSamsungPreview` writes it; null stops fetching.
    */
   setSource(source: PreviewSource | null): void {
-    native?.setSource(source === null ? null : JSON.stringify(sourceSchema.parse(source)));
+    native?.setSource(source === null ? null : JSON.stringify(parsePreviewSource(source)));
   },
 };
