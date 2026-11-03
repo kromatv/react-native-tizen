@@ -22,17 +22,17 @@ class VoiceModule final : public TurboModule {
   }
 
  private:
-  static TvState *state(TurboModule &module) {
-    return static_cast<VoiceModule &>(module).state_.get();
+  static TvState *state(const TurboModule &turboModule) {
+    return static_cast<const VoiceModule &>(turboModule).state_.get();
   }
 
-  static Value isAvailable(Runtime &, TurboModule &module, const Value *, size_t) {
-    auto *tv = state(module);
+  static Value isAvailable(Runtime &, TurboModule &turboModule, const Value *, size_t) {
+    const auto *tv = state(turboModule);
     return Value(tv != nullptr && tv->voiceAvailable());
   }
 
-  static Value setScreen(Runtime &runtime, TurboModule &module, const Value *arguments, size_t count) {
-    auto *tv = state(module);
+  static Value setScreen(Runtime &runtime, TurboModule &turboModule, const Value *arguments, size_t count) {
+    auto *tv = state(turboModule);
     if (tv == nullptr) return Value::undefined();
     if (count == 0 || !arguments[0].isString()) {
       tv->setScreen(std::nullopt);
@@ -42,20 +42,20 @@ class VoiceModule final : public TurboModule {
     return Value::undefined();
   }
 
-  static Value changeListeners(Runtime &runtime, TurboModule &module, const Value *arguments, size_t count, int delta) {
-    auto *tv = state(module);
-    if (tv != nullptr && count > 0 && arguments[0].isString()) {
+  static Value changeListeners(
+      Runtime &runtime, const TurboModule &turboModule, const Value *arguments, size_t count, int delta) {
+    if (auto *tv = state(turboModule); tv != nullptr && count > 0 && arguments[0].isString()) {
       tv->addListener(arguments[0].getString(runtime).utf8(runtime), delta);
     }
     return Value::undefined();
   }
 
-  static Value addListener(Runtime &runtime, TurboModule &module, const Value *arguments, size_t count) {
-    return changeListeners(runtime, module, arguments, count, 1);
+  static Value addListener(Runtime &runtime, TurboModule &turboModule, const Value *arguments, size_t count) {
+    return changeListeners(runtime, turboModule, arguments, count, 1);
   }
 
-  static Value removeListener(Runtime &runtime, TurboModule &module, const Value *arguments, size_t count) {
-    return changeListeners(runtime, module, arguments, count, -1);
+  static Value removeListener(Runtime &runtime, TurboModule &turboModule, const Value *arguments, size_t count) {
+    return changeListeners(runtime, turboModule, arguments, count, -1);
   }
 
   const std::shared_ptr<TvState> state_;

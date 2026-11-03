@@ -5,6 +5,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace rntizen {
 
@@ -38,11 +39,11 @@ class TvState final {
     voiceAvailable_ = available;
   }
 
-  bool listening(const std::string &event) const {
+  bool listening(std::string_view event) const {
     return event == "search" ? searchListeners_.load() > 0 : commandListeners_.load() > 0;
   }
 
-  void addListener(const std::string &event, int delta) {
+  void addListener(std::string_view event, int delta) {
     (event == "search" ? searchListeners_ : commandListeners_) += delta;
   }
 

@@ -7,6 +7,8 @@
 #include <Elementary.h>
 #include <dlfcn.h>
 
+#include <bit>
+#include <format>
 #include <string>
 
 namespace rntizen {
@@ -17,7 +19,7 @@ constexpr int kUhdWidth = 3840;
 constexpr int kUhdHeight = 2160;
 
 std::string text(PixelSize size) {
-  return std::to_string(size.width) + "x" + std::to_string(size.height);
+  return std::format("{}x{}", size.width, size.height);
 }
 
 PixelSize windowManagerScreen(Evas_Object *window) {
@@ -44,7 +46,7 @@ Eina_Bool logSettledSurface(void *) {
   PixelSize canvas{0, 0};
   evas_object_geometry_get(window, nullptr, nullptr, &geometry.width, &geometry.height);
   evas_output_size_get(evas_object_evas_get(window), &canvas.width, &canvas.height);
-  log(LogLevel::Info, "Screen: once shown, window " + text(geometry) + ", canvas " + text(canvas));
+  log(LogLevel::Info, std::format("Screen: once shown, window {}, canvas {}", text(geometry), text(canvas)));
   return ECORE_CALLBACK_CANCEL;
 }
 
@@ -53,16 +55,17 @@ Eina_Bool logSettledSurface(void *) {
 std::string waylandScreens() {
   using ConnectedDisplay = void *(*)(const char *);
   using SizeGet = void (*)(void *, int *, int *);
-  auto connected = reinterpret_cast<ConnectedDisplay>(dlsym(RTLD_DEFAULT, "ecore_wl2_connected_display_get"));
-  auto screen = reinterpret_cast<SizeGet>(dlsym(RTLD_DEFAULT, "ecore_wl2_display_screen_size_get"));
-  auto all = reinterpret_cast<SizeGet>(dlsym(RTLD_DEFAULT, "ecore_wl2_display_all_screens_size_get"));
+  auto connected = std::bit_cast<ConnectedDisplay>(dlsym(RTLD_DEFAULT, "ecore_wl2_connected_display_get"));
+  auto screen = std::bit_cast<SizeGet>(dlsym(RTLD_DEFAULT, "ecore_wl2_display_screen_size_get"));
+  auto all = std::bit_cast<SizeGet>(dlsym(RTLD_DEFAULT, "ecore_wl2_display_all_screens_size_get"));
   void *display = connected != nullptr ? connected(nullptr) : nullptr;
   if (display == nullptr) return "";
   PixelSize one{0, 0};
   PixelSize every{0, 0};
   if (screen != nullptr) screen(display, &one.width, &one.height);
   if (all != nullptr) all(display, &every.width, &every.height);
-  return ", ecore_wl2_display_screen_size_get " + text(one) + ", ecore_wl2_display_all_screens_size_get " + text(every);
+  return std::format(
+      ", ecore_wl2_display_screen_size_get {}, ecore_wl2_display_all_screens_size_get {}", text(one), text(every));
 }
 
 } // namespace
@@ -77,10 +80,19 @@ PixelSize fitWindowToScreen(Evas_Object *window, bool uhd, PixelSize systemInfo)
   }
   PixelSize canvas{0, 0};
   evas_output_size_get(evas_object_evas_get(window), &canvas.width, &canvas.height);
+  std::string request;
+  if (uhd) request = uhdScreen ? " (asked for a 4K UI)" : " (asked for a 4K UI, the screen is not 4K)";
   log(LogLevel::Info,
-      "Screen: system_info " + text(systemInfo) + ", elm_win_screen_size_get " + text(screen) +
-          ", ecore_evas_screen_geometry_get " + text(ecoreScreen) + waylandScreens() + "; window " + text(size) + ", canvas " +
-          text(canvas) + (uhd ? " (asked for a 4K UI" + std::string(uhdScreen ? ")" : ", the screen is not 4K)") : ""));
+      std::format(
+          "Screen: system_info {}, elm_win_screen_size_get {}, ecore_evas_screen_geometry_get {}{}; "
+          "window {}, canvas {}{}",
+          text(systemInfo),
+          text(screen),
+          text(ecoreScreen),
+          waylandScreens(),
+          text(size),
+          text(canvas),
+          request));
   ecore_timer_add(2.0, logSettledSurface, nullptr);
   return size;
 }
