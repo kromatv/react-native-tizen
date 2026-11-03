@@ -74,7 +74,7 @@ export function devServerBundleStep(
   reporter: Reporter,
   outDir: string,
   origin: string,
-  reachableHost: (task: Task) => Promise<string>,
+  reachableHost: (task: Task) => string | Promise<string>,
 ): Promise<DevServerBundle> {
   return reporter.step(
     'JavaScript bundle',

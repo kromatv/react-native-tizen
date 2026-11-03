@@ -96,7 +96,7 @@ export async function packageSteps(
   const bundle =
     request.devServer === undefined
       ? await bundleStep(reporter, app)
-      : await devServerBundleStep(reporter, bundleDir(app), request.devServer, async () =>
+      : await devServerBundleStep(reporter, bundleDir(app), request.devServer, () =>
           devBuildHost(request.log),
         );
   const icuData = await icuDataStep(reporter, app);

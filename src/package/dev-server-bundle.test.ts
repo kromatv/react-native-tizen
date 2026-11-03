@@ -48,6 +48,11 @@ describe('devServerBundleStep', () => {
       const bundle = await devServerBundleStep(reporter, dir, 'http://localhost:8081', () =>
         Promise.resolve('192.168.1.20'),
       );
+      const failing = devServerBundleStep(reporter, dir, 'http://localhost:8081', () =>
+        devBuildHost(null),
+      );
+
+      await expect(failing).rejects.toThrow('A release build cannot load its bundle');
 
       expect(bundle.bundleUrl).toMatch(/^http:\/\/192\.168\.1\.20:8081\/\.expo\//);
       expect(readFileSync(bundle.bytecode, 'utf8')).toBe(';\n');
