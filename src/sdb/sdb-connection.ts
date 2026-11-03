@@ -40,12 +40,15 @@ function dial({ host, port }: SdbAddress, timeoutMs: number): Promise<Socket> {
     const socket = createConnection({ host, port });
     socket.setNoDelay(true);
     socket.setTimeout(timeoutMs);
-    const fail = (message: string) => {
+    const fail = (reason: ConnectFailure, message: string) => {
       socket.destroy();
-      reject(new SdbConnectError('unreachable', `sdb: ${message} ${host}:${port}`));
+      reject(new SdbConnectError(reason, `sdb: ${message} ${host}:${port}`));
     };
-    socket.once('timeout', () => fail('timed out connecting to'));
-    socket.once('error', () => fail('could not reach'));
+    socket.once('timeout', () => fail('unreachable', 'timed out connecting to'));
+    socket.once('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'ECONNRESET') fail('refused', 'the connection was reset by');
+      else fail('unreachable', 'could not reach');
+    });
     socket.once('connect', () => {
       socket.setTimeout(0);
       socket.removeAllListeners('timeout');
