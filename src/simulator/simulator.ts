@@ -1,4 +1,5 @@
 import { closeSync, mkdirSync, openSync, realpathSync, renameSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AppProject } from '../app/app-project.ts';
@@ -17,7 +18,7 @@ import {
   stopInstance,
 } from './lima.ts';
 import { instanceEnv, type SimulatorInstance } from './instance.ts';
-import { mountRoot } from './mount-root.ts';
+import { mountRoot, requireNarrowMount } from './mount-root.ts';
 
 /** The VM definition, guest scripts, shims, launcher and viewer. */
 export const SIMULATOR_DIR = fileURLToPath(new URL('../../simulator', import.meta.url));
@@ -52,7 +53,9 @@ function simulatorMounts(app: AppProject): MountParams {
     expoModulesJsi.dir,
     ...libraries.map((library) => library.dir),
   ];
-  return { ProjectDir: mountRoot(dirs.map((dir) => realpathSync(dir))), CacheDir: cacheDir() };
+  const root = mountRoot(dirs.map((dir) => realpathSync(dir)));
+  requireNarrowMount(root, realpathSync(homedir()));
+  return { ProjectDir: root, CacheDir: cacheDir() };
 }
 
 /** Installs the VM's packages. Repeating it only installs what is missing. */

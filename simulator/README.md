@@ -120,6 +120,11 @@ so `default` is display `:100`, `http://127.0.0.1:40000/` and log port 41000.
 Two names can land on the same slot; the second to start then fails, naming the
 first, and needs another name.
 
+The VM mounts, read-only and at the same path, the deepest directory holding
+this package, the app's react-native and Expo packages and its native
+libraries. It refuses one that is `/`, your home directory or a directory
+above it: keep the app and its `node_modules` in one project directory.
+
 What instances share: the VM, its mounts, and the runtime build of each set of
 native libraries. Running from a checkout the VM does not mount (another clone,
 another worktree) restarts the VM and stops every instance in it.

@@ -1,4 +1,5 @@
 import { sep } from 'node:path';
+import { FixableError } from '../errors.ts';
 
 /**
  * The deepest directory holding every one of `dirs`, which must be absolute:
@@ -14,4 +15,21 @@ export function mountRoot(dirs: readonly string[]): string {
     length = shared;
   }
   return first.slice(0, length).join(sep) || sep;
+}
+
+/**
+ * Fails unless `root` is a directory below `home`: the VM would otherwise see
+ * every file of the user, or of the machine.
+ */
+export function requireNarrowMount(root: string, home: string): void {
+  const homeParts = home.split(sep).filter(Boolean);
+  const rootParts = root.split(sep).filter(Boolean);
+  const coversHome =
+    rootParts.length <= homeParts.length &&
+    rootParts.every((part, index) => part === homeParts[index]);
+  if (!coversHome) return;
+  throw new FixableError(
+    `The simulator would mount ${root}, which holds ${home}`,
+    'Keep the app, its node_modules and react-native-tizen in one project directory inside your home directory.',
+  );
 }
