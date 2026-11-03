@@ -46,7 +46,7 @@ Eina_Bool logSettledSurface(void *) {
   PixelSize canvas{0, 0};
   evas_object_geometry_get(window, nullptr, nullptr, &geometry.width, &geometry.height);
   evas_output_size_get(evas_object_evas_get(window), &canvas.width, &canvas.height);
-  log(LogLevel::Info, std::format("Screen: once shown, window {}, canvas {}", text(geometry), text(canvas)));
+  log(LogLevel::Info, "Screen: once shown, window " + text(geometry) + ", canvas " + text(canvas));
   return ECORE_CALLBACK_CANCEL;
 }
 
@@ -64,8 +64,7 @@ std::string waylandScreens() {
   PixelSize every{0, 0};
   if (screen != nullptr) screen(display, &one.width, &one.height);
   if (all != nullptr) all(display, &every.width, &every.height);
-  return std::format(
-      ", ecore_wl2_display_screen_size_get {}, ecore_wl2_display_all_screens_size_get {}", text(one), text(every));
+  return ", ecore_wl2_display_screen_size_get " + text(one) + ", ecore_wl2_display_all_screens_size_get " + text(every);
 }
 
 } // namespace
@@ -83,16 +82,9 @@ PixelSize fitWindowToScreen(Evas_Object *window, bool uhd, PixelSize systemInfo)
   std::string request;
   if (uhd) request = uhdScreen ? " (asked for a 4K UI)" : " (asked for a 4K UI, the screen is not 4K)";
   log(LogLevel::Info,
-      std::format(
-          "Screen: system_info {}, elm_win_screen_size_get {}, ecore_evas_screen_geometry_get {}{}; "
-          "window {}, canvas {}{}",
-          text(systemInfo),
-          text(screen),
-          text(ecoreScreen),
-          waylandScreens(),
-          text(size),
-          text(canvas),
-          request));
+      "Screen: system_info " + text(systemInfo) + ", elm_win_screen_size_get " + text(screen) +
+          ", ecore_evas_screen_geometry_get " + text(ecoreScreen) + waylandScreens() + "; window " + text(size) + ", canvas " +
+          text(canvas) + request);
   ecore_timer_add(2.0, logSettledSurface, nullptr);
   return size;
 }
