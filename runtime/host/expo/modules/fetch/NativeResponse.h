@@ -5,6 +5,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -31,7 +32,7 @@ class NativeResponse final : public SharedObject {
 
   void awaitHead(Promise promise);
   void receiveHead(long status, std::vector<std::pair<std::string, std::string>> headers, std::string url, bool redirected);
-  void receiveBody(const std::string &body);
+  void receiveBody(std::string_view body);
   void complete(const std::string &error);
 
   folly::dynamic rawHeaders() const;

@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <string_view>
 
 namespace rntizen::expo {
@@ -44,7 +43,7 @@ FetchedImage fetchImage(const std::string &uri, const std::string &cacheKey) {
   try {
     auto file = imageFileFor(uri, cacheKey);
     return {.path = std::move(file.path), .cacheType = std::move(file.cacheType), .error = {}};
-  } catch (const std::runtime_error &failure) {
+  } catch (const std::exception &failure) {
     return {.path = {}, .cacheType = {}, .error = failure.what()};
   }
 }

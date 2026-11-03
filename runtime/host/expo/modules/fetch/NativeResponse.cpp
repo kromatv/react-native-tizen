@@ -26,7 +26,7 @@ void NativeResponse::receiveHead(
   if (head) head->resolve();
 }
 
-void NativeResponse::receiveBody(const std::string &body) {
+void NativeResponse::receiveBody(std::string_view body) {
   std::lock_guard lock(mutex_);
   body_ += body;
 }

@@ -5,8 +5,6 @@
 
 #include "logging/Log.h"
 
-#include <stdexcept>
-
 namespace rntizen::expo {
 
 namespace {
@@ -24,7 +22,7 @@ class ExpoImageModule final : public Module {
               for (const auto &url : urls) {
                 try {
                   imageFileFor(url, "");
-                } catch (const std::runtime_error &error) {
+                } catch (const std::exception &error) {
                   log(LogLevel::Debug, std::string("Image.prefetch: ") + error.what());
                   all = false;
                 }
