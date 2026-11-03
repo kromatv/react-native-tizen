@@ -42,6 +42,13 @@ export interface LogServer {
   close(): Promise<void>;
 }
 
+/** Who may connect to {@link listenForLogs}, and what to say when its port is taken. */
+export interface ListenOptions {
+  readonly inUseHint?: string;
+  /** The TV's address, when known: a connection from any other host but this computer is dropped. */
+  readonly peer?: string | null;
+}
+
 /** The port {@link listenForLogs} was asked for is held by another program. */
 export class PortInUseError extends FixableError {}
 
@@ -56,6 +63,11 @@ const PORT_IN_USE_HINT =
 
 function addressOf(socket: Socket): string {
   return socket.remoteAddress?.replace(/^::ffff:/, '') ?? 'the TV';
+}
+
+/** True when a connection from `from` may stay: this computer, or `peer` when one is known. */
+export function acceptsPeer(from: string, peer: string | null): boolean {
+  return peer === null || from === peer || LOOPBACK.has(from);
 }
 
 function noLinkError(device: string | null, port: number): FixableError {
@@ -75,13 +87,15 @@ function failureLine(error: unknown): string {
  * Listens for what a development build streams over TCP: its JSON log lines,
  * from any number of app launches, and its control link, until closed. A
  * process on this computer may also ask it, on the same port, to capture an
- * app's screen. `inUseHint` is what to do when something else holds the port.
+ * app's screen.
  */
 export function listenForLogs(
   port: number,
   listener: LogListener,
-  inUseHint = PORT_IN_USE_HINT,
+  options: ListenOptions = {},
 ): Promise<LogServer> {
+  const inUseHint = options.inUseHint ?? PORT_IN_USE_HINT;
+  const peer = options.peer ?? null;
   const sockets = new Set<Socket>();
   const links = new ControlLinks();
   let boundPort = port;
@@ -118,6 +132,10 @@ export function listenForLogs(
 
   const server = createServer((socket) => {
     const from = addressOf(socket);
+    if (!acceptsPeer(from, peer)) {
+      socket.destroy();
+      return;
+    }
     let role: Role = { kind: 'pending' };
     sockets.add(socket);
     const onFrame = (frame: StreamFrame) => {

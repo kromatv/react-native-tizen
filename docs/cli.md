@@ -310,6 +310,13 @@ in its `react-native-tizen.json`. `rn-tizen` prints each one as
 message. The TV must reach this computer on that port: allow incoming
 connections if a firewall asks.
 
+A log line is untrusted input. `rn-tizen` drops its control characters, all
+but line feed and tab, before printing it, so an app cannot move the cursor or
+retitle the terminal. When it knows the TV (`run`, and `perf` or `screenshot`
+with `--device`), it closes any connection from another host but this
+computer; `logs` and the commands without `--device` take any host on the
+network.
+
 While nothing listens, the app tries again every 500 ms and keeps its last 200
 lines at `info` or louder. The next listener gets those first, after a line
 saying how many it missed. Start `logs` or `perf` at any time: the app finds

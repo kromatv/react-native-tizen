@@ -1,7 +1,7 @@
 import { connect } from 'node:net';
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from './log-line.ts';
-import { listenForLogs } from './log-server.ts';
+import { acceptsPeer, listenForLogs } from './log-server.ts';
 
 function send(port: number, payload: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -75,5 +75,24 @@ describe('listenForLogs with a perf listener', () => {
     await server.close();
 
     expect(sources).toEqual(['127.0.0.1']);
+  });
+});
+
+describe('acceptsPeer', () => {
+  it('accepts anyone when the TV is not known', () => {
+    expect(acceptsPeer('192.168.1.60', null)).toBe(true);
+  });
+
+  it('accepts the TV', () => {
+    expect(acceptsPeer('192.168.1.50', '192.168.1.50')).toBe(true);
+  });
+
+  it('accepts this computer, which relays screenshots', () => {
+    expect(acceptsPeer('127.0.0.1', '192.168.1.50')).toBe(true);
+    expect(acceptsPeer('::1', '192.168.1.50')).toBe(true);
+  });
+
+  it('drops another host once the TV is known', () => {
+    expect(acceptsPeer('192.168.1.60', '192.168.1.50')).toBe(false);
   });
 });

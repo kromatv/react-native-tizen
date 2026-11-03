@@ -74,7 +74,7 @@ function listenForInstanceLogs(
 ): Promise<LogServer> {
   const port = parsePort(flags['log-port'], '--log-port', 'simulator', instance.logPort);
   const busy = `Another \`${simulatorCommandLine('run', instance.name)}\` is probably printing its logs: stop it, pass --no-logs, or pass --log-port <port>.`;
-  return listenForLogs(port, printer, busy);
+  return listenForLogs(port, printer, { inUseHint: busy });
 }
 
 /**

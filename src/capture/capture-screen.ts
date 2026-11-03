@@ -16,7 +16,8 @@ const RELAY_SLACK_MS = 5_000;
  * the app's control link connects. Log lines that arrive meanwhile are dropped.
  */
 export async function captureScreen(port: number, device: string | null): Promise<ScreenFrame> {
-  const server = await listenForLogs(port, { onEntry: () => undefined }).catch((error: unknown) => {
+  const listener = { onEntry: () => undefined };
+  const server = await listenForLogs(port, listener, { peer: device }).catch((error: unknown) => {
     if (error instanceof PortInUseError) return null;
     throw error;
   });

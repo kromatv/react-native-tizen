@@ -14,6 +14,7 @@ import { LogPrinter } from '../logs/log-printer.ts';
 import { listenForLogs, type LogServer } from '../logs/log-server.ts';
 import { packageSteps } from '../pipeline/package-steps.ts';
 import { RUNTIME_LIBRARY } from '../runtime/build-runtime.ts';
+import { deviceHost } from '../tizen/sdb-output.ts';
 import { installPackage, launchPackage } from '../tizen/tizen-cli.ts';
 import { BUILD_OPTIONS, findDevice, openBuild, settleBuild } from './build-options.ts';
 
@@ -55,7 +56,10 @@ export const runCommand: Command = {
       transform: crashSymbolizer(join(app.tizenDir, 'lib', RUNTIME_LIBRARY)),
     });
     const listening = log !== null && flags['no-logs'] !== true;
-    const server: LogServer | null = listening ? await listenForLogs(log.port, printer) : null;
+    const peer = deviceHost(device.serial);
+    const server: LogServer | null = listening
+      ? await listenForLogs(log.port, printer, { peer })
+      : null;
     try {
       const tpk = await packageSteps(reporter, { ...build, profile: flags.profile });
       await reporter.step(

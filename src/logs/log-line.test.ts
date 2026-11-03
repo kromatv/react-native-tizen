@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { painter } from '../paint.ts';
-import { formatLogEntry, isAtLeast, parseLogLine } from './log-line.ts';
+import { formatLogEntry, isAtLeast, parseLogLine, printable } from './log-line.ts';
 
 const NINE_AM = new Date(2026, 10, 2, 9, 5, 3);
 
@@ -21,6 +21,16 @@ describe('parseLogLine', () => {
 
   it('treats an unknown level as info', () => {
     expect(parseLogLine('{"level":"fatal","message":"x"}').level).toBe('info');
+  });
+
+  it('strips the control characters of a JSON message', () => {
+    expect(parseLogLine('{"level":"info","message":"\\u001b]0;owned\\u0007hi"}').message).toBe(
+      ']0;ownedhi',
+    );
+  });
+
+  it('strips the control characters of a raw line', () => {
+    expect(parseLogLine('crash\u001b[31m here\u009b').message).toBe('crash[31m here');
   });
 
   it('keeps JSON without a message as raw text', () => {
@@ -63,5 +73,19 @@ describe('isAtLeast', () => {
 
   it('holds back a quieter level', () => {
     expect(isAtLeast('debug', 'info')).toBe(false);
+  });
+});
+
+describe('printable', () => {
+  it('keeps line feeds and tabs', () => {
+    expect(printable('a\tb\nc')).toBe('a\tb\nc');
+  });
+
+  it('drops C0 controls, delete and C1 controls', () => {
+    expect(printable('a\u0000\u0008\r\u001b\u007f\u0085\u009fb')).toBe('ab');
+  });
+
+  it('keeps text beyond the control ranges', () => {
+    expect(printable('héllo wörld ✓')).toBe('héllo wörld ✓');
   });
 });

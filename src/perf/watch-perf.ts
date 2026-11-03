@@ -37,7 +37,10 @@ export async function watchPerf(reporter: Reporter, watch: PerfWatch): Promise<P
     minimum: watch.minimum,
     device: watch.device,
   });
-  const server = await listenForLogs(watch.port, listener, watch.inUseHint);
+  const server = await listenForLogs(watch.port, listener, {
+    inUseHint: watch.inUseHint,
+    peer: watch.device,
+  });
   const address = pickLanAddress(networkInterfaces(), watch.device) ?? 'this computer';
   const until =
     watch.durationMs === null

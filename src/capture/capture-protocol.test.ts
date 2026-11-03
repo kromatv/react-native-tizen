@@ -47,6 +47,46 @@ describe('parseCaptureReply', () => {
     expect(parseCaptureReply(line).kind).toBe('invalid');
   });
 
+  it('refuses a stride longer than a row and its padding', () => {
+    const line = JSON.stringify({
+      type: 'screenshot',
+      id: 1,
+      width: 2,
+      height: 1,
+      stride: 8 + 65,
+      bytes: 8 + 65,
+    });
+
+    expect(parseCaptureReply(line)).toEqual({
+      kind: 'invalid',
+      reason: 'stride is longer than a padded row',
+    });
+  });
+
+  it('reads a stride with up to 64 bytes of row padding', () => {
+    const line = JSON.stringify({
+      type: 'screenshot',
+      id: 1,
+      width: 2,
+      height: 1,
+      stride: 8 + 64,
+      bytes: 8 + 64,
+    });
+
+    expect(parseCaptureReply(line).kind).toBe('frame');
+  });
+
+  it('strips control characters from a failure the app sends', () => {
+    const line = encodeFailure(3, 'no \u001b[2Jframe', 'try\u0007 later').trim();
+
+    expect(parseCaptureReply(line)).toEqual({
+      kind: 'failure',
+      id: 3,
+      message: 'no [2Jframe',
+      hint: 'try later',
+    });
+  });
+
   it('reads a failure with its hint', () => {
     expect(parseCaptureReply(encodeFailure(3, 'no frame', 'try later').trim())).toEqual({
       kind: 'failure',

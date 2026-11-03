@@ -25,6 +25,8 @@ const LEVEL_STYLE = {
   error: 'red',
 } as const satisfies Record<LogLevel, Parameters<Paint>[0]>;
 
+const CONTROL_CHARACTERS = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F]/g;
+
 const LABEL_WIDTH = 5;
 const TIME_WIDTH = 8;
 
@@ -37,12 +39,22 @@ function parseJson(line: string): unknown {
 }
 
 /**
+ * `text` without its C0 and C1 control characters, line feed and tab kept, so
+ * what a TV sends cannot move the cursor, recolor or retitle the terminal.
+ */
+export function printable(text: string): string {
+  return text.replace(CONTROL_CHARACTERS, '');
+}
+
+/**
  * Reads a JSON log line (`{"level":"info","message":"..."}`). Anything else,
- * such as a crash dump written raw, is kept as an info line.
+ * such as a crash dump written raw, is kept as an info line. Either way the
+ * message is {@link printable}.
  */
 export function parseLogLine(line: string): LogEntry {
   const parsed = logEntrySchema.safeParse(parseJson(line));
-  return parsed.success ? parsed.data : { level: 'info', message: line };
+  const entry = parsed.success ? parsed.data : { level: 'info' as const, message: line };
+  return { level: entry.level, message: printable(entry.message) };
 }
 
 /** True when `level` is at least as loud as `minimum`. */

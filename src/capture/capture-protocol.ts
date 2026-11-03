@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { printable } from '../logs/log-line.ts';
 
 const MAX_SIDE = 8192;
 const MAX_MESSAGE = 4096;
+const MAX_ROW_PADDING = 64;
 
 /**
  * A screen a development build captured: `pixels` holds premultiplied BGRA
@@ -31,6 +33,10 @@ const frameHeaderSchema = z
     bytes: z.number().int().min(4),
   })
   .refine((header) => header.stride >= header.width * 4, 'stride is shorter than a row')
+  .refine(
+    (header) => header.stride <= header.width * 4 + MAX_ROW_PADDING,
+    'stride is longer than a padded row',
+  )
   .refine(
     (header) => header.bytes === header.stride * header.height,
     'bytes is not stride x height',
@@ -82,7 +88,12 @@ export function parseCaptureReply(line: string): CaptureReply {
   const failure = failureSchema.safeParse(json);
   if (failure.success) {
     const { id, message, hint } = failure.data;
-    return { kind: 'failure', id, message, hint };
+    return {
+      kind: 'failure',
+      id,
+      message: printable(message),
+      hint: hint === undefined ? undefined : printable(hint),
+    };
   }
   const header = frameHeaderSchema.safeParse(json);
   if (header.success) return { kind: 'frame', header: header.data };
