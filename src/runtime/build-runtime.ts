@@ -8,7 +8,7 @@ import { stampAt } from '../stamp.ts';
 import type { Task } from '../task.ts';
 import type { TizenSdk } from '../tizen/tizen-sdk.ts';
 import type { TizenTarget } from '../tizen/target.ts';
-import { buildCMakeProject, tizenDefinitions } from './cmake.ts';
+import { buildCMakeProject, sourcesKey, tizenDefinitions } from './cmake.ts';
 import type { HermesHostCompilers } from './hermes-host.ts';
 
 /** The native library the .NET shell loads. */
@@ -22,12 +22,17 @@ interface RuntimeBuildDirs {
   readonly library: string;
 }
 
-/** The build directories of the runtime for an app's react-native and a target. */
+/**
+ * The build directories of the runtime for an app's react-native and a target,
+ * one set per runtime sources and react-native on disk, since a CMake build
+ * directory belongs to one source tree.
+ */
 export function runtimeBuildDirs(
   reactNative: ResolvedPackage,
   target: TizenTarget,
+  runtimeDir: string = RUNTIME_DIR,
 ): RuntimeBuildDirs {
-  const key = `${reactNative.name}-${reactNative.version}-${target.arch}-tizen${target.platformVersion}`;
+  const key = `${reactNative.name}-${reactNative.version}-${target.arch}-tizen${target.platformVersion}-${sourcesKey(runtimeDir, reactNative.dir)}`;
   const root = join(cacheDir(), 'runtime', key);
   const cmake = join(root, 'build');
   return {

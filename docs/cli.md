@@ -64,7 +64,7 @@ config plugin option `supportsBackgroundPlayback` is read too
 | The bundle | `tizen/build/bundle/` (`index.tizen.js`, `index.tizen.hbc`, `assets/`) |
 | The signed package | `tizen/bin/Release/<target framework>/<package>-<version>.tpk`, `tizen90` for Tizen 9.0 (TizenFX API 9, not the Tizen version) |
 | Third-party licences | `res/THIRD_PARTY_NOTICES.md` in every package |
-| The native runtime | `~/.cache/react-native-tizen/runtime/<react-native>-<version>-<arch>-tizen<platform>/` |
+| The native runtime | `~/.cache/react-native-tizen/runtime/<react-native>-<version>-<arch>-tizen<platform>-<key>/`, the key a hash of where this package's `runtime/` and the app's react-native are, so two checkouts or two apps never share a CMake build |
 | Hermes host compilers | `~/.cache/react-native-tizen/hermes/<version>/` |
 | Linkable sysroots | `~/.cache/react-native-tizen/sysroots/` |
 | Source archives | `~/.cache/react-native-tizen/downloads/`, shared with CMake |

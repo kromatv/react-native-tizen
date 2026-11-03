@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TOOLCHAIN_FILE } from '../package-paths.ts';
@@ -13,6 +14,17 @@ interface CMakeProject {
   readonly build: string;
   readonly definitions: Readonly<Record<string, string>>;
   readonly targets?: readonly string[];
+}
+
+/**
+ * A short key for where `paths` are on disk. A CMake build directory belongs to
+ * one source tree, so a build of sources two checkouts both hold is named with it.
+ */
+export function sourcesKey(...paths: readonly string[]): string {
+  return createHash('sha256')
+    .update(paths.map((path) => realpathSync(path)).join('\0'))
+    .digest('hex')
+    .slice(0, 12);
 }
 
 /** The definitions that cross-compile a project for one Tizen target. */
