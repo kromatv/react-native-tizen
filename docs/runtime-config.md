@@ -8,7 +8,7 @@ starts. `rn-tizen package` and `rn-tizen run` write it; you do not edit it.
   "appKey": "main",
   "bundleFile": "index.tizen.hbc",
   "development": true,
-  "log": { "host": "192.168.1.124", "port": 8099 }
+  "log": { "host": "192.168.1.20", "port": 8099 }
 }
 ```
 

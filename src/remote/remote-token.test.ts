@@ -20,10 +20,10 @@ describe('remote tokens', () => {
   it('saves a token readable by this user only and reads it back', () => {
     const env = cacheEnv();
 
-    saveToken('192.168.1.107', '87654321', env);
+    saveToken('192.168.1.50', '87654321', env);
 
-    expect(readToken('192.168.1.107', env)).toBe('87654321');
-    expect(statSync(tokenPath('192.168.1.107', env)).mode & 0o777).toBe(0o600);
+    expect(readToken('192.168.1.50', env)).toBe('87654321');
+    expect(statSync(tokenPath('192.168.1.50', env)).mode & 0o777).toBe(0o600);
     expect(
       statSync(join(env.XDG_STATE_HOME ?? '', 'react-native-tizen', 'remote')).mode & 0o777,
     ).toBe(0o700);
@@ -54,15 +54,15 @@ describe('remote tokens', () => {
   });
 
   it('reads nothing for a TV that never paired', () => {
-    expect(readToken('192.168.1.108', cacheEnv())).toBeNull();
+    expect(readToken('192.168.1.51', cacheEnv())).toBeNull();
   });
 
   it('reads nothing from a file that does not hold a token', () => {
     const env = cacheEnv();
-    saveToken('192.168.1.107', '1', env);
+    saveToken('192.168.1.50', '1', env);
 
-    writeFileSync(tokenPath('192.168.1.107', env), 'not a token&x=1');
+    writeFileSync(tokenPath('192.168.1.50', env), 'not a token&x=1');
 
-    expect(readToken('192.168.1.107', env)).toBeNull();
+    expect(readToken('192.168.1.50', env)).toBeNull();
   });
 });

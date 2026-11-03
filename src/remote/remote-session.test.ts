@@ -36,14 +36,14 @@ function fakeTv(): FakeTv {
   };
 }
 
-const options = { host: '192.168.1.107', timeoutMs: 1000, keyIntervalMs: 0 };
+const options = { host: '192.168.1.50', timeoutMs: 1000, keyIntervalMs: 0 };
 
 describe('remoteUrl', () => {
   it('names the client rn-tizen in base64 and adds the token when there is one', () => {
-    expect(remoteUrl('192.168.1.107', null)).toBe(
-      'wss://192.168.1.107:8002/api/v2/channels/samsung.remote.control?name=cm4tdGl6ZW4=',
+    expect(remoteUrl('192.168.1.50', null)).toBe(
+      'wss://192.168.1.50:8002/api/v2/channels/samsung.remote.control?name=cm4tdGl6ZW4=',
     );
-    expect(remoteUrl('192.168.1.107', '12345678')).toMatch(/&token=12345678$/);
+    expect(remoteUrl('192.168.1.50', '12345678')).toMatch(/&token=12345678$/);
   });
 });
 
@@ -90,7 +90,7 @@ describe('openRemote', () => {
     tv.answer({ event: 'ms.channel.unauthorized' });
 
     await expect(opening).rejects.toMatchObject({
-      message: 'The TV at 192.168.1.107 refused rn-tizen',
+      message: 'The TV at 192.168.1.50 refused rn-tizen',
       hint: expect.stringContaining('Device Connection Manager'),
     });
     expect(tv.closed()).toBe(true);
@@ -103,7 +103,7 @@ describe('openRemote', () => {
     tv.drop('the connection failed');
 
     await expect(opening).rejects.toThrow(
-      'Cannot reach the remote API of the TV at 192.168.1.107:8002 (the connection failed)',
+      'Cannot reach the remote API of the TV at 192.168.1.50:8002 (the connection failed)',
     );
   });
 

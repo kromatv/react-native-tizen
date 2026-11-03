@@ -19,12 +19,12 @@ const INTERFACES = {
   lo0: [ipv4('127.0.0.1', '255.0.0.0', true)],
   utun4: [ipv4('100.64.0.2', '255.192.0.0')],
   en7: [ipv4('10.0.0.5', '255.255.255.0')],
-  en0: [ipv4('192.168.1.124')],
+  en0: [ipv4('192.168.1.20')],
 };
 
 describe('pickLanAddress', () => {
   it('picks the address on the TV subnet', () => {
-    expect(pickLanAddress(INTERFACES, '192.168.1.107')).toBe('192.168.1.124');
+    expect(pickLanAddress(INTERFACES, '192.168.1.50')).toBe('192.168.1.20');
   });
 
   it('falls back to a private address when no interface shares the TV subnet', () => {
@@ -33,7 +33,7 @@ describe('pickLanAddress', () => {
 
   it('picks a private address when the TV is unknown', () => {
     expect(pickLanAddress({ utun4: INTERFACES.utun4, en0: INTERFACES.en0 }, null)).toBe(
-      '192.168.1.124',
+      '192.168.1.20',
     );
   });
 

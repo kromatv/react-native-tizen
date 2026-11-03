@@ -105,8 +105,8 @@ describe('connection roles', () => {
   });
 
   it('reads the device a relay request names, null for any', () => {
-    expect(relayRequestDevice('{"type":"screenshot-request","device":"192.168.1.107"}')).toBe(
-      '192.168.1.107',
+    expect(relayRequestDevice('{"type":"screenshot-request","device":"192.168.1.50"}')).toBe(
+      '192.168.1.50',
     );
     expect(relayRequestDevice('{"type":"screenshot-request","device":null}')).toBeNull();
     expect(relayRequestDevice('{"level":"info","message":"hi"}')).toBeUndefined();

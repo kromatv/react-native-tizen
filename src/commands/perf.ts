@@ -40,7 +40,7 @@ export const perfCommand: Command = {
   summary: "Print a development build's frame times, thread load and heap every second",
   options: OPTIONS,
   examples: [
-    'rn-tizen perf --device 192.168.1.107',
+    'rn-tizen perf --device 192.168.1.50',
     'rn-tizen perf --port 8102 --duration 20 --out boot.jsonl',
   ],
   async run(args, context) {

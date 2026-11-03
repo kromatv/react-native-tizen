@@ -37,7 +37,7 @@ export const runCommand: Command = {
   summary: 'Package the app, install it on a TV, launch it and print its logs',
   options: OPTIONS,
   examples: [
-    'rn-tizen run --device 192.168.1.107',
+    'rn-tizen run --device 192.168.1.50',
     'rn-tizen run',
     'rn-tizen run --level debug',
     'rn-tizen run --no-logs',

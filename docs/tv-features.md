@@ -220,7 +220,7 @@ The cost: a 3840x2160 window buffer is four times the memory and every full
 redraw shades four times the pixels; Samsung's memory budget for a UHD app is
 380 MB. Use it when the UI's sharpness matters more than its frame rate.
 
-Not every 4K TV grants it. The 2024 Frame (GQ75LS03DAUXZG, Tizen 9.0) reports
+Not every 4K TV grants it. The 2024 Samsung The Frame (LS03D), Tizen 9.0, reports
 1920x1080 from every source with the metadata and refuses a larger window, so
 there the app stays at 1080p; the log line says so.
 

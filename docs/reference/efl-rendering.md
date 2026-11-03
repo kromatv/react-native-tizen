@@ -332,7 +332,7 @@ Paths are under `runtime/host/src/` unless stated.
 
 ## Verified on hardware
 
-Samsung GQ75LS03DAUXZG (The Frame, 2024), Tizen 9.0, armv7 userland, 2026-11-02.
+2024 Samsung The Frame (LS03D), Tizen 9.0, armv7 userland, 2026-11-02.
 
 | Fact | How it was seen |
 | --- | --- |
@@ -509,7 +509,7 @@ What was built, and why:
 
 ### Verify on a TV
 
-On the GQ75LS03DAUXZG (2024, Tizen 9.0):
+On the 2024 Samsung The Frame (LS03D), Tizen 9.0:
 
 1. The log says "Evas filters resolved from libefl.so.1", not "Evas filters
    unavailable".

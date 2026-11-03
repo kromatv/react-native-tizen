@@ -13,10 +13,10 @@ architecture:32
 
 describe('parseDeviceList', () => {
   it('reads every device sdb lists, model name included', () => {
-    const output = 'List of devices attached \n192.168.1.107:26101 \tdevice    \tGQ75LS03DAUXZG\n';
+    const output = 'List of devices attached \n192.168.1.50:26101 \tdevice    \tGQ75LS03DAUXZG\n';
 
     expect(parseDeviceList(output)).toEqual([
-      { serial: '192.168.1.107:26101', state: 'device', name: 'GQ75LS03DAUXZG' },
+      { serial: '192.168.1.50:26101', state: 'device', name: 'GQ75LS03DAUXZG' },
     ]);
   });
 
@@ -60,18 +60,18 @@ describe('parseCapabilities', () => {
 
 describe('deviceSerial', () => {
   it('adds the sdb port to a bare IP address', () => {
-    expect(deviceSerial('192.168.1.107')).toBe('192.168.1.107:26101');
+    expect(deviceSerial('192.168.1.50')).toBe('192.168.1.50:26101');
   });
 
   it('keeps an explicit port and any other serial as typed', () => {
-    expect(deviceSerial('192.168.1.107:26102')).toBe('192.168.1.107:26102');
+    expect(deviceSerial('192.168.1.50:26102')).toBe('192.168.1.50:26102');
     expect(deviceSerial('emulator-26101')).toBe('emulator-26101');
   });
 });
 
 describe('deviceHost', () => {
   it('reads the IP address of a network serial', () => {
-    expect(deviceHost('192.168.1.107:26101')).toBe('192.168.1.107');
+    expect(deviceHost('192.168.1.50:26101')).toBe('192.168.1.50');
   });
 
   it('finds no host in an emulator serial', () => {

@@ -61,7 +61,7 @@ your computer's IP address, then restart the TV.
 
 ```sh
 npx rn-tizen doctor
-npx rn-tizen run --device 192.168.1.107
+npx rn-tizen run --device 192.168.1.50
 ```
 
 `doctor` names the exact fix for anything missing. The first `run` builds the

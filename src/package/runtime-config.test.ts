@@ -13,11 +13,11 @@ const app = { packageId: 'org.example.app', features };
 
 describe('runtimeConfig', () => {
   it('marks a development build and points it at the log listener', () => {
-    expect(runtimeConfig('index.tizen.hbc', { host: '192.168.1.124', port: 8099 }, app)).toEqual({
+    expect(runtimeConfig('index.tizen.hbc', { host: '192.168.1.20', port: 8099 }, app)).toEqual({
       appKey: 'main',
       bundleFile: 'index.tizen.hbc',
       development: true,
-      log: { host: '192.168.1.124', port: 8099 },
+      log: { host: '192.168.1.20', port: 8099 },
       resolution: '1080p',
       backgroundMedia: false,
     });

@@ -395,7 +395,7 @@ whose window manager reports 3840x2160 is still to be found.
 
 ### Verify on a TV
 
-On the GQ75LS03DAUXZG (2024, Tizen 9.0):
+On the 2024 Samsung The Frame (LS03D), Tizen 9.0:
 
 1. With no metadata, log `system_info` `screen.width` and `screen.height`,
    `elm_win_screen_size_get`, `ecore_wl2_display_screen_size_get`,

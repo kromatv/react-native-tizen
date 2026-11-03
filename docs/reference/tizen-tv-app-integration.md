@@ -200,7 +200,7 @@ Built; the developer's guide is [`../tv-features.md`](../tv-features.md#voice).
 
 ## Verify on a TV
 
-On the GQ75LS03DAUXZG (2024, Tizen 9.0), in Developer mode. Record each
+On the 2024 Samsung The Frame (LS03D), Tizen 9.0, in Developer mode. Record each
 answer here as H with the model, year and Tizen version.
 
 Picture-in-picture:

@@ -18,7 +18,7 @@ export const devicesCommand: Command = {
   name: 'devices',
   summary: 'List the TVs sdb can reach, with their CPU and Tizen version',
   options: OPTIONS,
-  examples: ['rn-tizen devices', 'rn-tizen devices --connect 192.168.1.107'],
+  examples: ['rn-tizen devices', 'rn-tizen devices --connect 192.168.1.50'],
   async run(args) {
     const values = parseCommandArgs('devices', args, OPTIONS);
     const reporter = new Reporter({ verbose: values.verbose ?? false });

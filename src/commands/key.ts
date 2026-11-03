@@ -68,10 +68,10 @@ export const keyCommand: Command = {
   summary: "Press remote keys on a TV, in order, through the TV's network remote",
   options: OPTIONS,
   examples: [
-    'rn-tizen key Down Down Enter --device 192.168.1.107',
-    'rn-tizen key Back --device 192.168.1.107',
-    'rn-tizen key 1 --device 192.168.1.107       digits 0 to 9',
-    'rn-tizen key KEY_CH_LIST --device 192.168.1.107   any KEY_* code as written',
+    'rn-tizen key Down Down Enter --device 192.168.1.50',
+    'rn-tizen key Back --device 192.168.1.50',
+    'rn-tizen key 1 --device 192.168.1.50       digits 0 to 9',
+    'rn-tizen key KEY_CH_LIST --device 192.168.1.50   any KEY_* code as written',
   ],
   async run(args) {
     const { positionals, options } = splitActionArgs(args);

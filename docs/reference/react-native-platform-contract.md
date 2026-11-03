@@ -48,7 +48,7 @@ are abbreviated:
 | Calls into JS | `callFunctionOnModule` goes through the buffered executor and needs the module registered with `RN$registerCallableModule`. `RCTDeviceEventEmitter`, `RCTNativeAppEventEmitter` and `HMRClient` are registered by `setUpBatchedBridge.js`. | doc: `ReactInstance.cpp:345-395`, `RN/Libraries/Core/setUpBatchedBridge.js:20-40` | Device events through `RCTDeviceEventEmitter.emit`. |
 | Surface start | `UIManager::startSurface` runs `RN$AppRegistry.runApplication` through the runtime executor it was given, and throws `Global was not installed` if the bundle has not run. | doc: `RC/renderer/uimanager/UIManager.cpp:235-262`, `RC/renderer/uimanager/AppRegistryBinding.cpp:27-31` | A buffered executor, so a surface can start before the bundle arrives. |
 
-Verified on a Samsung GQ75LS03DAUXZG (2024, Tizen 9.0, armv7), 2026-11-03,
+Verified on a 2024 Samsung The Frame (LS03D), Tizen 9.0, armv7, 2026-11-03,
 with KROMA's frame HUD, which counts `requestAnimationFrame` callbacks: before
 timers waited for a frame it read 5000 to 9000 FPS on every screen; after, 56
 to 60, the animator ticking at 60 Hz (`rn-tizen perf`, `hz`).

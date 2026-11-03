@@ -32,7 +32,7 @@ describe('PerfListener', () => {
   it('keeps and prints each sample', () => {
     const { listener, printed } = listenerFor(null);
 
-    listener.onEntry(perfEntry(58), '192.168.1.107');
+    listener.onEntry(perfEntry(58), '192.168.1.50');
 
     expect(listener.samples.map((sample) => sample.frames)).toEqual([58]);
     expect(printed()).toContain('fps  58/60');
@@ -41,14 +41,14 @@ describe('PerfListener', () => {
   it('prints log lines at the minimum level or louder, and drops quieter ones', () => {
     const { listener, printed } = listenerFor(null);
 
-    listener.onEntry({ level: 'info', message: 'Running "main"' }, '192.168.1.107');
-    listener.onEntry({ level: 'warn', message: 'Slow frame' }, '192.168.1.107');
+    listener.onEntry({ level: 'info', message: 'Running "main"' }, '192.168.1.50');
+    listener.onEntry({ level: 'warn', message: 'Slow frame' }, '192.168.1.50');
 
     expect(printed()).toBe('09:00:05 warn  Slow frame\n');
   });
 
   it('ignores another TV when one was named', () => {
-    const { listener, printed } = listenerFor('192.168.1.107');
+    const { listener, printed } = listenerFor('192.168.1.50');
 
     listener.onEntry(perfEntry(60), '192.168.1.200');
     listener.onConnect('192.168.1.200');
@@ -62,8 +62,8 @@ describe('PerfListener.firstSample', () => {
   it('settles once a sample arrives', async () => {
     const { listener } = listenerFor(null);
 
-    listener.onEntry({ level: 'warn', message: 'not yet' }, '192.168.1.107');
-    listener.onEntry(perfEntry(1), '192.168.1.107');
+    listener.onEntry({ level: 'warn', message: 'not yet' }, '192.168.1.50');
+    listener.onEntry(perfEntry(1), '192.168.1.50');
 
     await expect(listener.firstSample).resolves.toBeUndefined();
   });

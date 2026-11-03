@@ -297,7 +297,7 @@ screen's Back exits without the popup (section 1).
 
 ## Verify on a TV
 
-On the GQ75LS03DAUXZG (2024, Tizen 9.0), in Developer mode:
+On the 2024 Samsung The Frame (LS03D), Tizen 9.0, in Developer mode:
 
 1. A TPK with `use.preview` = `endpoint_URL=https://...` and no service: do
    tiles show, and when is the URL fetched (server log)? Partly answered: with

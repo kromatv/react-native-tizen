@@ -9,7 +9,7 @@ instead of the app's `main`, such as one screen under test.
 ```sh
 rn-tizen doctor                          # is this machine ready?
 rn-tizen package                         # build a signed .tpk
-rn-tizen run --device 192.168.1.107      # build, install, launch, print logs
+rn-tizen run --device 192.168.1.50      # build, install, launch, print logs
 ```
 
 Every command prints one line per step. `--verbose` (`-v`) also prints what the
@@ -114,7 +114,7 @@ Lists the TVs sdb can reach, with each one's model, CPU and Tizen version.
 | `--connect <ip>` | Connect to the TV at this address first (port 26101 unless given) |
 
 ```sh
-rn-tizen devices --connect 192.168.1.107
+rn-tizen devices --connect 192.168.1.50
 ```
 
 ### `rn-tizen setup`
@@ -199,7 +199,7 @@ connected first. The log listener starts before the build, so a port already in
 use fails before anything compiles, and nothing the app logs at startup is lost.
 
 ```sh
-rn-tizen run --device 192.168.1.107
+rn-tizen run --device 192.168.1.50
 rn-tizen run --level debug
 ```
 
@@ -224,8 +224,8 @@ asks every app that connects for samples: an app measures nothing until asked,
 and stops when `perf` exits. A release build has none of it.
 
 ```sh
-rn-tizen run --device 192.168.1.107 --no-logs
-rn-tizen perf --device 192.168.1.107
+rn-tizen run --device 192.168.1.50 --no-logs
+rn-tizen perf --device 192.168.1.50
 rn-tizen perf --port 8102 --duration 20 --out boot.jsonl
 ```
 

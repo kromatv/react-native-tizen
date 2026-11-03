@@ -38,7 +38,7 @@ export const screenshotCommand: Command = {
   summary: "Save what a development build on a TV draws as a PNG (the app's UI only)",
   options: OPTIONS,
   examples: [
-    'rn-tizen screenshot --device 192.168.1.107 --out shot.png',
+    'rn-tizen screenshot --device 192.168.1.50 --out shot.png',
     'rn-tizen screenshot',
     'rn-tizen screenshot --port 9000',
   ],
