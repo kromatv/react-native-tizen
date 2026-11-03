@@ -68,8 +68,10 @@ config plugin option `supportsBackgroundPlayback` is read too
 | Hermes host compilers | `~/.cache/react-native-tizen/hermes/<version>/` |
 | Linkable sysroots | `~/.cache/react-native-tizen/sysroots/` |
 | Source archives | `~/.cache/react-native-tizen/downloads/`, shared with CMake |
+| Remote pairing tokens | `~/.local/state/react-native-tizen/remote/<tv>.token`, readable by you only, out of the cache so a cache wipe does not unpair; one an older `rn-tizen` left in the cache moves there on first use |
 
-`RN_TIZEN_CACHE_DIR` moves the cache; `XDG_CACHE_HOME` is honoured too.
+`RN_TIZEN_CACHE_DIR` moves the cache; `XDG_CACHE_HOME` is honoured too, and
+`XDG_STATE_HOME` moves the tokens.
 `TIZEN_SDK_DIR` points at Tizen Studio when it is not in `~/tizen-studio`, and
 `TIZEN_LLVM_DIR` at a clang and lld that are not Homebrew's.
 

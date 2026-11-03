@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -9,7 +9,7 @@ const dirs: string[] = [];
 function cacheEnv(): NodeJS.ProcessEnv {
   const dir = mkdtempSync(join(tmpdir(), 'rn-tizen-token-'));
   dirs.push(dir);
-  return { RN_TIZEN_CACHE_DIR: dir };
+  return { RN_TIZEN_CACHE_DIR: join(dir, 'cache'), XDG_STATE_HOME: join(dir, 'state') };
 }
 
 afterEach(() => {
@@ -24,7 +24,33 @@ describe('remote tokens', () => {
 
     expect(readToken('192.168.1.107', env)).toBe('87654321');
     expect(statSync(tokenPath('192.168.1.107', env)).mode & 0o777).toBe(0o600);
-    expect(statSync(join(env.RN_TIZEN_CACHE_DIR ?? '', 'remote')).mode & 0o777).toBe(0o700);
+    expect(
+      statSync(join(env.XDG_STATE_HOME ?? '', 'react-native-tizen', 'remote')).mode & 0o777,
+    ).toBe(0o700);
+  });
+
+  it('keeps tokens in the state directory, out of the cache', () => {
+    const env = cacheEnv();
+
+    saveToken('192.168.1.50', '87654321', env);
+
+    expect(tokenPath('192.168.1.50', env)).toBe(
+      join(env.XDG_STATE_HOME ?? '', 'react-native-tizen', 'remote', '192.168.1.50.token'),
+    );
+    expect(existsSync(join(env.RN_TIZEN_CACHE_DIR ?? '', 'remote'))).toBe(false);
+  });
+
+  it('moves a token an older rn-tizen kept in the cache', () => {
+    const env = cacheEnv();
+    const cached = join(env.RN_TIZEN_CACHE_DIR ?? '', 'remote', '192.168.1.50.token');
+    mkdirSync(join(env.RN_TIZEN_CACHE_DIR ?? '', 'remote'), { recursive: true });
+    writeFileSync(cached, '87654321');
+
+    const token = readToken('192.168.1.50', env);
+
+    expect(token).toBe('87654321');
+    expect(existsSync(cached)).toBe(false);
+    expect(statSync(tokenPath('192.168.1.50', env)).mode & 0o777).toBe(0o600);
   });
 
   it('reads nothing for a TV that never paired', () => {
