@@ -35,6 +35,8 @@ class ControlLink final {
   bool answer(int socket, const std::string &line);
   std::variant<ScreenCapture, std::string> capture();
   bool isStopping();
+  bool adopt(int socket);
+  void waitToReconnect();
 
   const std::string host_;
   const std::uint16_t port_;
@@ -43,7 +45,7 @@ class ControlLink final {
   bool stopping_{false};
   std::atomic<bool> perfRequested_{false};
   int socket_{-1};
-  std::thread thread_;
+  std::jthread thread_;
 };
 
 } // namespace rntizen
