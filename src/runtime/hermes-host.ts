@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { cacheDir } from '../cache-dir.ts';
+import { cacheDir } from '../user-dirs.ts';
 import type { Task } from '../task.ts';
 import { buildCMakeProject } from './cmake.ts';
 import { archiveFileName, pinnedDependency } from './dependencies.ts';
