@@ -7,7 +7,7 @@ import { bundleApp, type AppBundle } from '../bundle/bundle-app.ts';
 import { formatSize } from '../cli/format.ts';
 import { ensureIcuData } from '../runtime/icu-data.ts';
 import type { Reporter } from '../cli/reporter.ts';
-import { devBundleUrl, devServerBundle } from '../package/dev-server-bundle.ts';
+import { devBuildHost, devServerBundleStep } from '../package/dev-server-bundle.ts';
 import { buildDotnetProject } from '../package/dotnet-build.ts';
 import { featureNotes } from '../package/feature-notes.ts';
 import type { LogEndpoint } from '../package/runtime-config.ts';
@@ -17,7 +17,6 @@ import { signPackage } from '../signing/sign-package.ts';
 import { resolveSigning, type SigningRequest } from '../tizen/signing-identity.ts';
 import type { TizenSdk } from '../tizen/tizen-sdk.ts';
 import type { TizenTarget } from '../tizen/target.ts';
-import { FixableError } from '../errors.ts';
 import { runtimeSteps } from './runtime-steps.ts';
 
 interface PackageRequest {
@@ -62,17 +61,6 @@ function icuDataStep(reporter: Reporter, app: AppProject): Promise<string> {
   );
 }
 
-function devServerUrl(request: PackageRequest): string | undefined {
-  if (request.devServer === undefined) return undefined;
-  if (request.log === null) {
-    throw new FixableError(
-      'A release build cannot load its bundle from a dev server',
-      'Drop --release, or drop --dev-server.',
-    );
-  }
-  return devBundleUrl(request.devServer, request.log.host);
-}
-
 function until(date: string): string {
   return new Date(date).toISOString().slice(0, 10);
 }
@@ -105,28 +93,17 @@ export async function packageSteps(
   );
   for (const note of featureNotes(app.config.features, request.log === null)) reporter.note(note);
   const runtimeLibrary = await runtimeSteps(reporter, sdk, app, target);
-  const bundleUrl = devServerUrl(request);
   const bundle =
-    bundleUrl === undefined
+    request.devServer === undefined
       ? await bundleStep(reporter, app)
-      : await reporter.step(
-          'JavaScript bundle',
-          () => devServerBundle(bundleDir(app)),
-          () => bundleUrl,
+      : await devServerBundleStep(reporter, bundleDir(app), request.devServer, async () =>
+          devBuildHost(request.log),
         );
   const icuData = await icuDataStep(reporter, app);
   const projectDir = await reporter.step(
     'Tizen project',
     () =>
-      writeTizenProject({
-        app,
-        profile: shell,
-        runtimeLibrary,
-        bundle,
-        log: request.log,
-        icuData,
-        bundleUrl,
-      }),
+      writeTizenProject({ app, profile: shell, runtimeLibrary, bundle, log: request.log, icuData }),
     (dir) => relative(process.cwd(), dir) || '.',
   );
   const tpk = await reporter.step(

@@ -9,7 +9,7 @@ import { Reporter } from '../cli/reporter.ts';
 import { LogPrinter } from '../logs/log-printer.ts';
 import { listenForLogs, type LogServer } from '../logs/log-server.ts';
 import { bundleDir, bundleStep } from '../pipeline/package-steps.ts';
-import { devBundleUrl, devServerBundle } from '../package/dev-server-bundle.ts';
+import { devServerBundleStep } from '../package/dev-server-bundle.ts';
 import { simulatorCommandLine, type SimulatorInstance } from '../simulator/instance.ts';
 import { ensureVm, hostAddress, startApp, type VmPreparation } from '../simulator/simulator.ts';
 import { ensureIcuData } from '../runtime/icu-data.ts';
@@ -96,16 +96,8 @@ async function simulatorBundle(
   context: CommandContext,
 ): Promise<SimulatorBundle> {
   const devServer = flags['dev-server'];
-  if (devServer !== undefined) {
-    return reporter.step(
-      'JavaScript bundle',
-      async (task) => ({
-        ...(await devServerBundle(bundleDir(app))),
-        bundleUrl: devBundleUrl(devServer, await hostAddress(task)),
-      }),
-      (bundle) => bundle.bundleUrl ?? '',
-    );
-  }
+  if (devServer !== undefined)
+    return devServerBundleStep(reporter, bundleDir(app), devServer, hostAddress);
   if (flags.bundle !== undefined) return givenBytecode(resolve(context.cwd, flags.bundle));
   return bundleStep(reporter, app);
 }

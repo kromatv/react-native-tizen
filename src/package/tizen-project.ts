@@ -25,8 +25,6 @@ interface TizenProjectInputs {
   readonly runtimeLibrary: string;
   readonly bundle: AppBundle;
   readonly log: LogEndpoint | null;
-  /** A dev server the runtime loads the bundle from, instead of the packaged one. */
-  readonly bundleUrl?: string;
   /** The ICU data the runtime reads, `icudt<major>l.dat`. */
   readonly icuData: string;
 }
@@ -89,7 +87,12 @@ async function writeResources(inputs: TizenProjectInputs, dir: string): Promise<
   await copyFile(inputs.icuData, join(res, basename(inputs.icuData)));
   await copyFile(NOTICES_FILE, join(res, basename(NOTICES_FILE)));
   await cp(inputs.bundle.assetsDir, join(res, 'assets'), { recursive: true });
-  const config = runtimeConfig(BYTECODE_FILE, inputs.log, inputs.app.config, inputs.bundleUrl);
+  const config = runtimeConfig(
+    BYTECODE_FILE,
+    inputs.log,
+    inputs.app.config,
+    inputs.bundle.bundleUrl,
+  );
   await writeFile(join(res, RUNTIME_CONFIG_FILE), `${JSON.stringify(config, null, 2)}\n`);
   await writeAppConfig(inputs.app.root, res);
 }

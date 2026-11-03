@@ -92,6 +92,7 @@ export async function readLog(
 export async function startJob(
   dir: string,
   request: Pick<Job, 'kind' | 'title' | 'args' | 'cwd'>,
+  runner = RUNNER,
 ): Promise<Job> {
   await mkdir(dir, { recursive: true });
   await prune(dir);
@@ -102,12 +103,12 @@ export async function startJob(
     startedAt: new Date().toISOString(),
   };
   await writeJob(dir, job);
-  const runner = spawn(process.execPath, [RUNNER, dir, job.id], {
+  const child = spawn(process.execPath, [runner, dir, job.id], {
     detached: true,
     stdio: 'ignore',
     cwd: request.cwd,
   });
-  runner.unref();
+  child.unref();
   return job;
 }
 

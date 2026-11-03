@@ -112,4 +112,19 @@ describe('jobs and the page API', () => {
     expect(await handler(new Request('http://x/'))).toBeUndefined();
     expect((await handler(new Request('http://x/api/jobs/zz/log')))?.status).toBe(404);
   });
+
+  it('stops a job on POST, and reads a log from the start for a bad offset', async () => {
+    const dir = jobsDir();
+    await import('node:fs/promises').then(({ mkdir }) => mkdir(dir, { recursive: true }));
+    await writeJob(dir, job('a-1', '2026-11-03T10:00:00.000Z'));
+    writeFileSync(join(dir, 'a-1.log'), 'done');
+
+    const stop = await handler(new Request('http://x/api/jobs/a-1/stop', { method: 'POST' }));
+    const log = await handler(new Request('http://x/api/jobs/a-1/log?from=-4'));
+    const whole = await handler(new Request('http://x/api/jobs/a-1/log'));
+
+    expect(await stop?.json()).toMatchObject({ job: { id: 'a-1', status: 'succeeded' } });
+    expect(await log?.json()).toMatchObject({ text: 'done' });
+    expect(await whole?.json()).toMatchObject({ text: 'done', next: 4 });
+  });
 });
