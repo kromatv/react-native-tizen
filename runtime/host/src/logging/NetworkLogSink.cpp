@@ -26,10 +26,14 @@ std::string jsonLine(LogLevel level, std::string_view message) {
   return folly::toJson(entry) + "\n";
 }
 
+std::string helloLine(const std::string &app) {
+  return folly::toJson(folly::dynamic::object("type", "log")("version", 1)("app", app)) + "\n";
+}
+
 } // namespace
 
-NetworkLogSink::NetworkLogSink(std::string host, std::uint16_t port)
-    : host_(std::move(host)), port_(port), thread_([this] { run(); }) {}
+NetworkLogSink::NetworkLogSink(std::string host, std::uint16_t port, std::string app)
+    : host_(std::move(host)), port_(port), hello_(helloLine(app)), thread_([this] { run(); }) {}
 
 NetworkLogSink::~NetworkLogSink() {
   {
@@ -65,6 +69,7 @@ bool NetworkLogSink::isStopping() {
 void NetworkLogSink::adopt(int socket) {
   socket_ = socket;
   sentOnSocket_ = 0;
+  greeted_ = false;
   unreachable_ = false;
   setCrashReportDescriptor(socket_);
   if (dropped_ == 0) return;
@@ -104,17 +109,19 @@ void NetworkLogSink::run() {
       }
       adopt(socket);
     }
-    std::string line = std::move(pending_.front());
-    pending_.pop_front();
+    const bool greeting = !greeted_;
+    std::string line = greeting ? hello_ : std::move(pending_.front());
+    if (!greeting) pending_.pop_front();
     const int socket = socket_;
     lock.unlock();
     const bool delivered = !peerHasClosed(socket) && sendAll(socket, line.data(), line.size());
     lock.lock();
     if (delivered) {
-      ++sentOnSocket_;
+      if (greeting) greeted_ = true;
+      else ++sentOnSocket_;
       continue;
     }
-    pending_.push_front(std::move(line));
+    if (!greeting) pending_.push_front(std::move(line));
     const bool refused = sentOnSocket_ == 0;
     disconnect();
     if (refused) wake_.wait_for(lock, kRetryDelay, [this] { return stopping_; });
