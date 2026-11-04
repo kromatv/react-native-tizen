@@ -19,10 +19,10 @@ std::optional<int> leadingNumber(std::string_view &text) {
 
 std::optional<TizenVersion> parseTizenVersion(std::string_view text) {
   const auto major = leadingNumber(text);
-  if (!major || text.empty() || text.front() != '.') return std::nullopt;
+  if (!major.has_value() || text.empty() || text.front() != '.') return std::nullopt;
   text.remove_prefix(1);
   const auto minor = leadingNumber(text);
-  if (!minor) return std::nullopt;
+  if (!minor.has_value()) return std::nullopt;
   return TizenVersion{.major = *major, .minor = *minor};
 }
 
