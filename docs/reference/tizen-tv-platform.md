@@ -221,6 +221,11 @@ and 10.0 aarch64 rootstraps; on aarch64 Linux the same code, linked in place of
 glibc's, catches a C++ exception thrown in the executable and one thrown in a
 shared library.
 
+The x86_64 rootstraps of 8.0 and 9.0 carry IA-64's kernel headers in
+`usr/include/asm` (`break.h`, `ia64regs.h`, IA-64 syscall numbers), so Hermes'
+`perf_event_open` call does not compile against them; 10.0's carries x86's. O
+(as installed by Tizen Studio's package manager, 2026-11-04)
+
 Toolchains: Tizen Studio's only i586 GCC is 9.2 (`tools/i586-linux-gnueabi-gcc-9.2`),
 whose libstdc++ has no `<span>`, `<concepts>`, `<ranges>` or `<format>`;
 React Native 0.88's `ReactCommon` includes them in 9 files. O. So the 32-bit

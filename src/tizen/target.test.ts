@@ -23,12 +23,12 @@ describe('rootstrapFor', () => {
     );
   });
 
-  it('links the emulator against 8.0, the first x86_64 rootstrap, below that floor', () => {
+  it('links the emulator against 10.0, the one x86_64 TV emulator, whatever the floor', () => {
     expect(rootstrapFor({ arch: 'x86_64', platformVersion: '6.0' })).toMatchObject({
-      platformVersion: '8.0',
-      name: 'tizen-8.0-emulator64.core',
+      platformVersion: '10.0',
+      name: 'tizen-10.0-emulator64.core',
     });
-    expect(rootstrapFor({ arch: 'x86_64', platformVersion: '10.0' }).name).toBe(
+    expect(rootstrapFor({ arch: 'x86_64', platformVersion: '9.0' }).name).toBe(
       'tizen-10.0-emulator64.core',
     );
   });

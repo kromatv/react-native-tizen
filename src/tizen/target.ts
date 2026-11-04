@@ -38,9 +38,10 @@ const ROOTSTRAP_KIND: Record<TizenArch, string> = {
 
 // Tizen Studio publishes no TV rootstrap. From 8.0 it has one `tizen` profile;
 // before, IoT Headed is the profile with armv7 and aarch64 rootstraps (mobile
-// has armv7 only), and the first x86_64 rootstrap is 8.0's.
+// has armv7 only). The only x86_64 TV emulator is 10.0's, and the 8.0 and 9.0
+// x86_64 rootstraps carry IA-64's asm headers.
 const UNIFIED_PROFILE_SINCE = '8.0';
-const FIRST_EMULATOR64 = '8.0';
+const FIRST_EMULATOR64 = '10.0';
 
 /** The rootstrap a target is compiled and linked against. */
 export function rootstrapFor({ arch, platformVersion }: TizenTarget): Rootstrap {
