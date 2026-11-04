@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/wordmark-dark.svg">
-    <img alt="react-native-tizen" src="docs/assets/wordmark-light.svg" width="480">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/kromatv/react-native-tizen/main/docs/assets/wordmark-dark.svg">
+    <img alt="react-native-tizen" src="https://raw.githubusercontent.com/kromatv/react-native-tizen/main/docs/assets/wordmark-light.svg" width="480">
   </picture>
 </p>
 
@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <img alt="The example app on a Samsung TV: the title React Native, native on a Samsung TV, and three cards for Hermes, Fabric and Expo" src="https://github.com/user-attachments/assets/281e3a64-aff1-49b8-9db8-4d33ee38d2dc" width="720">
+  <img alt="The example app on a Samsung TV: the title React Native, native on a Samsung TV, and three cards for Hermes, Fabric and Expo" src="https://raw.githubusercontent.com/kromatv/react-native-tizen/main/docs/assets/screenshot-home.png" width="720">
   <br>
   <sub>The example app on a Samsung The Frame (2024), Tizen 9.0, captured by the app itself.</sub>
 </p>
@@ -304,7 +304,7 @@ native animated driver. Each figure is a median.
 | `.tpk` size (release) | 8.0 MB, against 0.16 MB for the web app | 1 build |
 
 <p align="center">
-  <img alt="The benchmark screen on the TV: a FlatList of 1,000 rows scrolling, row 75 focused, resident memory 87.2 MB" src="https://github.com/user-attachments/assets/46b7221b-5651-4247-99e8-a13340088c91" width="640">
+  <img alt="The benchmark screen on the TV: a FlatList of 1,000 rows scrolling, row 75 focused, resident memory 87.2 MB" src="https://raw.githubusercontent.com/kromatv/react-native-tizen/main/docs/assets/screenshot-flatlist.png" width="640">
 </p>
 
 Frame counts come from a development build, the only kind `rn-tizen perf`
