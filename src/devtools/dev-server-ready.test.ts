@@ -1,3 +1,4 @@
+import { createServer } from 'node:http';
 import { describe, expect, it, vi } from 'vitest';
 import { waitForDevServer, type DevServerPoll } from './dev-server-ready.ts';
 
@@ -40,5 +41,21 @@ describe('waitForDevServer', () => {
     await expect(waitForDevServer({ EXPO_DEV_SERVER_ORIGIN: 'ftp://x' }, poll([]))).rejects.toThrow(
       'did not answer',
     );
+  });
+
+  it("asks the dev server's /status over HTTP by default", async () => {
+    const server = createServer((request, response) => {
+      response.end(request.url === '/status' ? 'packager-status:running' : 'no');
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address();
+    try {
+      if (address === null || typeof address === 'string') throw new Error('no TCP address');
+      const origin = `http://127.0.0.1:${address.port}`;
+
+      expect(await waitForDevServer({ EXPO_DEV_SERVER_ORIGIN: origin })).toBe(origin);
+    } finally {
+      server.close();
+    }
   });
 });

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { singleReactNativeIssue } from '../dependencies/react-native-copies.ts';
 import { FixableError } from '../errors.ts';
 import { tizenMetroIssue } from '../metro/metro-platforms.ts';
-import { expoStartPlan } from './devtools-commands.ts';
+import { openPlan } from './devtools-commands.ts';
 import { readJob, startJob, writeJob, type Job } from './jobs.ts';
 import { startPlannedJob } from './start-planned-job.ts';
 
@@ -29,9 +29,9 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('expoStartPlan', () => {
+describe('openPlan', () => {
   it('runs Run on TV or Run in simulator against the dev server, ending at launch', () => {
-    expect(expoStartPlan('10.0.0.7:26101', 'http://localhost:8081')).toEqual({
+    expect(openPlan('10.0.0.7:26101', 'http://localhost:8081')).toEqual({
       kind: 'run-tv',
       title: 'Run on TV 10.0.0.7:26101',
       args: [
@@ -45,7 +45,7 @@ describe('expoStartPlan', () => {
       exclusive: true,
       bundles: true,
     });
-    expect(expoStartPlan('simulator', 'http://localhost:8081').args).toEqual([
+    expect(openPlan('simulator', 'http://localhost:8081').args).toEqual([
       'simulator',
       'run',
       '--dev-server',
@@ -69,7 +69,7 @@ describe('startPlannedJob', () => {
     };
     await writeJob(dir, running);
 
-    await startPlannedJob(dir, expoStartPlan('10.0.0.7:26101', 'http://localhost:8081'), '/app');
+    await startPlannedJob(dir, openPlan('10.0.0.7:26101', 'http://localhost:8081'), '/app');
 
     expect(startJob).toHaveBeenCalledWith(
       dir,
@@ -82,7 +82,7 @@ describe('startPlannedJob', () => {
     vi.mocked(tizenMetroIssue).mockReturnValueOnce(new FixableError('no tizen', 'Run init.'));
 
     await expect(
-      startPlannedJob(dir, expoStartPlan('simulator', 'http://localhost:8081'), '/app'),
+      startPlannedJob(dir, openPlan('simulator', 'http://localhost:8081'), '/app'),
     ).rejects.toThrow('no tizen');
     expect(singleReactNativeIssue).toHaveBeenCalledWith('/app');
     expect(startJob).not.toHaveBeenCalled();

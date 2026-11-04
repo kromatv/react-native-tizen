@@ -87,11 +87,10 @@ export async function planCommand(
 }
 
 /**
- * What `expo start --tizen` runs once the dev server answers: Run on TV or Run
- * in simulator, ending once the app is launched, since its logs reach Expo's
- * terminal through the dev server.
+ * What `t` in `expo start` runs: Run on TV or Run in simulator, ending once the
+ * app is launched, since its logs reach Expo's terminal through the dev server.
  */
-export function expoStartPlan(target: string, devServer: string): JobPlan {
+export function openPlan(target: string, devServer: string): JobPlan {
   const plan =
     target === 'simulator'
       ? { kind: 'run-simulator', title: 'Run in simulator', args: ['simulator', 'run'] }
