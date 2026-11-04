@@ -85,3 +85,21 @@ export async function planCommand(
   }
   throw new CommandInputError(`Unknown command ${command}`);
 }
+
+/**
+ * What `expo start --tizen` runs once the dev server answers: Run on TV or Run
+ * in simulator, ending once the app is launched, since its logs reach Expo's
+ * terminal through the dev server.
+ */
+export function expoStartPlan(target: string, devServer: string): JobPlan {
+  const plan =
+    target === 'simulator'
+      ? { kind: 'run-simulator', title: 'Run in simulator', args: ['simulator', 'run'] }
+      : { kind: 'run-tv', title: `Run on TV ${target}`, args: ['run', '--device', target] };
+  return {
+    ...plan,
+    args: [...plan.args, '--dev-server', devServer, '--no-logs'],
+    exclusive: true,
+    bundles: true,
+  };
+}
