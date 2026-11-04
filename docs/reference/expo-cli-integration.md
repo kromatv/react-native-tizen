@@ -74,11 +74,12 @@ how they load the app's Metro config. Checked on 2026-11-03 and 2026-11-04.
 
 ## What this means for this package
 
-- `app.plugin.js` re-exports the compiled config plugin as an ES module. Its
-  props are the Tizen settings, validated with zod. The example in this
-  repository lists the TypeScript source, `../src/config/config-plugin.ts`,
-  since a checkout has no `dist/`; reading its config needs a Node that strips
-  types (section 1), as its Metro config, which imports `src/`, already does.
+- `app.plugin.js` re-exports the compiled config plugin as an ES module, plain
+  JavaScript that Node loads under `node_modules`, where it refuses to strip
+  types. Its props are the Tizen settings, validated with zod. The example in
+  this repository lists `../app.plugin.js`: listing the TypeScript source fails
+  on Node 22.13 (section 1), and `bun install` builds `dist/` through the
+  `prepare` script.
 - `rn-tizen init` writes `metro.config.mjs` or wraps an existing config, and
   suggests the app's `android.package`, else `com.anonymous.<slug>` sanitized
   as `expo prebuild` does, for the package id. Builds load the Metro config

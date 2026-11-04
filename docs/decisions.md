@@ -302,8 +302,10 @@ config loader, Metro's transform workers and the `rn-tizen` bin. So
 `bun run build` compiles `src/` to `dist/` with `tsc`, one file per source at
 the same depth, which keeps every path taken from `import.meta.url` (the
 package root, `react-native-overrides/`, `runtime/`, `shell/`, `simulator/`)
-right in both trees. `exports` and `bin` point at `dist/`, and `prepack` builds
+right in both trees. `exports` and `bin` point at `dist/`, and `prepare` builds
 it, so neither `npm pack` nor `npm publish` can ship a stale or missing build.
+Bun runs `prepare` on every `bun install` too, so a checkout has `dist/`, and
+the example lists `../app.plugin.js` as an app lists the package's plugin.
 `react-native-overrides/` and the app API under `src/api/` reach the app
 through Metro, which compiles TypeScript under `node_modules` with the app's
 Babel preset; the overrides ship as TypeScript, the API compiled with its

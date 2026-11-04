@@ -15,6 +15,19 @@ import { Reporter } from '../src/cli/reporter.ts';
 const REPO = resolve(import.meta.dirname, '..');
 const BYTECODE = join('tizen', 'build', 'bundle', 'index.tizen.hbc');
 const METRO = 'metro.config.mjs';
+const LOAD_PLUGIN = `
+import plugin from '@kromatv/react-native-tizen/app.plugin.js';
+if (typeof plugin !== 'function') throw new Error('app.plugin.js exports no function');
+const config = { name: 'Packed' };
+if (plugin(config, { package: 'org.example.packed' }) !== config) throw new Error('the plugin changed the config');
+let refused = false;
+try {
+  plugin(config, { package: 'packed' });
+} catch {
+  refused = true;
+}
+if (!refused) throw new Error('the plugin took a bad package id');
+`;
 
 const exampleSchema = z.object({
   dependencies: z.object({ expo: z.string(), react: z.string(), 'react-native': z.string() }),
@@ -82,10 +95,12 @@ try {
   ];
   if (secondInit.join() !== firstInit.join())
     throw new Error('rn-tizen init changed what it wrote before');
+  await sh(['node', '--input-type=module', '--eval', LOAD_PLUGIN], app);
+  await sh(['npx', 'expo', 'config', '--json'], app);
   await sh(['npx', 'rn-tizen', 'bundle'], app);
   if (!existsSync(join(app, BYTECODE))) throw new Error(`rn-tizen bundle wrote no ${BYTECODE}`);
   reporter.line(
-    'rn-tizen init sets a fresh Expo app up, and the packed package bundles it under Node.',
+    'rn-tizen init sets a fresh Expo app up, plain Node and Expo load the packed config plugin, and the package bundles the app.',
   );
 } finally {
   rmSync(work, { recursive: true, force: true });

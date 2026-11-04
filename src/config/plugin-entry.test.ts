@@ -6,15 +6,15 @@ import { isTizenPluginEntry } from './plugin-entry.ts';
 describe('isTizenPluginEntry', () => {
   const example = join(PACKAGE_ROOT, 'example');
 
-  it("takes the package's name, its app.plugin.js and the source the example lists", () => {
+  it("takes the package's name and a path to its app.plugin.js", () => {
     expect(isTizenPluginEntry(example, '@kromatv/react-native-tizen')).toBe(true);
     expect(isTizenPluginEntry(example, '../app.plugin.js')).toBe(true);
-    expect(isTizenPluginEntry(example, '../src/config/config-plugin.ts')).toBe(true);
   });
 
   it('refuses other plugins and paths', () => {
     expect(isTizenPluginEntry(example, 'expo-video')).toBe(false);
     expect(isTizenPluginEntry(example, './app.plugin.js')).toBe(false);
+    expect(isTizenPluginEntry(example, '../src/config/config-plugin.ts')).toBe(false);
     expect(isTizenPluginEntry(example, '/elsewhere/app.plugin.js')).toBe(false);
   });
 });
