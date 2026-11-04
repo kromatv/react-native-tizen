@@ -39,6 +39,7 @@ describe('compareTizenVersions', () => {
     expect(compareTizenVersions('6.5', '10.0')).toBeLessThan(0);
     expect(compareTizenVersions('9.0', '9.0')).toBe(0);
     expect(compareTizenVersions('6.5', '6.0')).toBeGreaterThan(0);
+    expect(compareTizenVersions('9', '9.0')).toBe(0);
   });
 });
 

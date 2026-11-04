@@ -15,11 +15,14 @@ export interface TizenTarget {
   readonly platformVersion: string;
 }
 
+function versionKey(version: string): number {
+  const [major, minor] = `${version}.0`.split('.');
+  return Number(major) * 1000 + Number(minor);
+}
+
 /** Orders two `major.minor` Tizen versions. */
 export function compareTizenVersions(left: string, right: string): number {
-  const [leftMajor = 0, leftMinor = 0] = left.split('.').map(Number);
-  const [rightMajor = 0, rightMinor = 0] = right.split('.').map(Number);
-  return leftMajor - rightMajor || leftMinor - rightMinor;
+  return versionKey(left) - versionKey(right);
 }
 
 /** A Tizen Studio rootstrap: where it is installed and the package that installs it. */
