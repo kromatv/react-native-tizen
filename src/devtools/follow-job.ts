@@ -28,6 +28,22 @@ function stopNow(job: Job | null): void {
   }
 }
 
+async function copyUntilEnd(
+  dir: string,
+  id: string,
+  from: number,
+  follower: JobFollower,
+  seen: (job: Job | null) => void,
+): Promise<Job | null> {
+  const log = await readLog(dir, id, from);
+  if (log.text !== '') follower.write(log.text);
+  const job = await readJob(dir, id);
+  seen(job);
+  if (job?.status !== 'running' && log.text === '') return job;
+  await follower.sleep(follower.intervalMs);
+  return copyUntilEnd(dir, id, log.next, follower, seen);
+}
+
 /**
  * Writes what a job prints as it prints it, until it ends, and returns how it
  * ended. The job stops if this process exits first.
@@ -37,19 +53,13 @@ export async function followJob(
   id: string,
   follower: Pick<JobFollower, 'write'> & Partial<JobFollower>,
 ): Promise<Job | null> {
-  const { write, intervalMs, sleep: wait, onExit } = { ...defaultFollower, ...follower };
+  const settings: JobFollower = { ...defaultFollower, ...follower };
   let job = await readJob(dir, id);
-  const cancel = onExit(() => stopNow(job));
+  const cancel = settings.onExit(() => stopNow(job));
   try {
-    let from = 0;
-    for (;;) {
-      const log = await readLog(dir, id, from);
-      if (log.text !== '') write(log.text);
-      from = log.next;
-      job = await readJob(dir, id);
-      if (job?.status !== 'running' && log.text === '') return job;
-      await wait(intervalMs);
-    }
+    return await copyUntilEnd(dir, id, 0, settings, (latest) => {
+      job = latest;
+    });
   } finally {
     cancel();
   }

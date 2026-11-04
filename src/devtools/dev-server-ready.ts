@@ -38,14 +38,22 @@ export async function waitForDevServer(
   env: NodeJS.ProcessEnv,
   poll: DevServerPoll = defaultPoll,
 ): Promise<string> {
-  const deadline = poll.now() + poll.timeoutMs;
-  while (poll.now() < deadline) {
-    const origin = await answers(env, poll);
-    if (origin !== null) return origin;
-    await poll.sleep(poll.intervalMs);
+  return pollUntil(env, poll, poll.now() + poll.timeoutMs);
+}
+
+async function pollUntil(
+  env: NodeJS.ProcessEnv,
+  poll: DevServerPoll,
+  deadline: number,
+): Promise<string> {
+  if (poll.now() >= deadline) {
+    throw new FixableError(
+      'The dev server did not answer, so the app was not opened on Tizen',
+      'Press t again once it runs.',
+    );
   }
-  throw new FixableError(
-    'The dev server did not answer, so the app was not opened on Tizen',
-    'Press shift+m, then Run on TV or Run in simulator, once it runs.',
-  );
+  const origin = await answers(env, poll);
+  if (origin !== null) return origin;
+  await poll.sleep(poll.intervalMs);
+  return pollUntil(env, poll, deadline);
 }
