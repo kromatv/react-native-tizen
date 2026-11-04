@@ -18,7 +18,7 @@
   <br>
   <img alt="React Native 0.88 (react-native-tvos)" src="https://img.shields.io/badge/React%20Native-0.88%20(react--native--tvos)-61dafb">
   <img alt="Expo SDK 58" src="https://img.shields.io/badge/Expo%20SDK-58-000020">
-  <img alt="Tizen TV 9.0 tested" src="https://img.shields.io/badge/Tizen%20TV-9.0%20tested-1428a0">
+  <img alt="Tizen TV 6.0 to 10.0, verified on 9.0" src="https://img.shields.io/badge/Tizen%20TV-6.0%20to%2010.0%2C%20verified%20on%209.0-1428a0">
 </p>
 
 <p align="center">
@@ -315,12 +315,19 @@ and the commands to reproduce them are in [docs/benchmarks.md](docs/benchmarks.m
 
 ## Status
 
-This is an alpha. One TV is verified: a Samsung GQ75LS03DAUXZG (The Frame,
-2024) on Tizen 9.0, armv7. `rn-tizen` builds for Tizen 9.0 only. A 9.0 package
-is built to run on every later version, but no later TV has been tried.
+This is an alpha. `rn-tizen` builds for Tizen 6.0 to 10.0, Samsung's TVs from
+2021 on: a package reaches its floor, 6.0 by default, and every later version
+([Tizen versions](docs/tizen-versions.md)). One TV is verified on hardware so
+far: a Samsung GQ75LS03DAUXZG (The Frame, 2024) on Tizen 9.0, armv7.
 
 Known gaps:
 
+- Only Tizen 9.0 has run on a TV. A 6.0-floor package runs there, and the
+  runtime's imports resolve in every rootstrap from 6.0 to 10.0, but no TV on
+  another version has run it.
+- TVs from 2020 and earlier (Tizen 5.5 and below) cannot run it: Samsung blocks
+  the native libraries an app carries below 6.0
+  ([reference](docs/reference/tizen-tv-platform.md#2-model-year-platform-runtime)).
 - No native focus engine, as above.
 - A `FlatList` sized only by `flex: 1` draws nothing. On a TV,
   react-native-tvos wraps every virtualized list in a `TVFocusGuideView` that has
@@ -339,6 +346,8 @@ Known gaps:
 
 - [Quick start](#quick-start), above
 - [The simulator](simulator/README.md): a virtual TV on an Apple silicon Mac
+- [Tizen versions](docs/tizen-versions.md): which Samsung TVs a package
+  reaches, and why the floor is 6.0
 - [Benchmarks](docs/benchmarks.md): the method and the raw results
 
 **CLI**

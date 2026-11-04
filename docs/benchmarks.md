@@ -11,6 +11,7 @@ measured on the TV below with the commands below. None is estimated.
 |---|---|
 | TV | Samsung GQ75LS03DAUXZG (The Frame, 2024) |
 | Tizen | 9.0, armv7 (`cpu_arch:armv7` in sdb's capabilities) |
+| Package floor | 9.0, the default at f6a4af1: the runtime linked against the 9.0 rootstrap, the shell built for `tizen90` |
 | UI plane | 1920x1080. The animator ticks at 50 Hz (`hz` in `rn-tizen perf`) |
 | Network | the TV and the Mac on the same home LAN |
 | Build machine | Apple M2 Max, macOS 27.2 |
@@ -181,14 +182,16 @@ locales the example lists.
 
 ## Reproduce
 
-From `example/`, with a TV in Developer mode and a signing profile:
+From `example/`, with a TV in Developer mode and a signing profile. The runs
+above used a 9.0 floor, so the commands pass `--platform 9.0`; since 6.0
+became the default floor, every package's shell lands in `tizen80/`:
 
 ```sh
 export EXPO_PUBLIC_BENCH_REPORT_URL=http://<this machine>:47200 EXPO_PUBLIC_BENCH_TIMELINE=1
 
 # release: cold start and memory
-rn-tizen package --entry src/screens/bench/main.ts
-cp tizen/bin/Release/tizen90/org.rntizen.example-1.0.0.tpk /tmp/bench-release.tpk
+rn-tizen package --platform 9.0 --entry src/screens/bench/main.ts
+cp tizen/bin/Release/tizen80/org.rntizen.example-1.0.0.tpk /tmp/bench-release.tpk
 rn-tizen install /tmp/bench-release.tpk --device <tv ip>
 BENCH_SETTLE_MS=8000 bun scripts/bench-server.ts cold-start <tv ip> /tmp/bench-release.tpk 12
 bun scripts/bench-server.ts listen > release.jsonl &
@@ -196,8 +199,8 @@ rn-tizen install /tmp/bench-release.tpk --device <tv ip> --keep-signature --laun
 
 # development: frames
 rm -rf tizen
-rn-tizen package --dev --device <tv ip> --entry src/screens/bench/main.ts
-rn-tizen install tizen/bin/Release/tizen90/org.rntizen.example-1.0.0.tpk --device <tv ip> --keep-signature --launch
+rn-tizen package --dev --platform 9.0 --device <tv ip> --entry src/screens/bench/main.ts
+rn-tizen install tizen/bin/Release/tizen80/org.rntizen.example-1.0.0.tpk --device <tv ip> --keep-signature --launch
 rn-tizen perf --device <tv ip> --duration 135 --out perf.jsonl
 ```
 
