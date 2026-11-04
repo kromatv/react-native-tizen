@@ -14,15 +14,15 @@ namespace rntizen {
 
 namespace {
 
-constexpr Ecore_Window kOtherWindow = 42;
+constexpr Ecore_Window kWindowNoCanvasListensOn = 42;
 
-void post(int type, const char *name, unsigned int keycode, Ecore_Window window = 0) {
+void post(int type, const char *name, unsigned int keycode) {
   auto *key = static_cast<Ecore_Event_Key *>(std::calloc(1, sizeof(Ecore_Event_Key)));
   key->keyname = name;
   key->key = name;
   key->keycode = keycode;
-  key->window = window;
-  key->event_window = window;
+  key->window = kWindowNoCanvasListensOn;
+  key->event_window = kWindowNoCanvasListensOn;
   ecore_event_add(type, key, nullptr, nullptr);
 }
 
@@ -143,8 +143,8 @@ TEST_CASE("RemoteInput on a canvas with no native window hears the keys of every
   {
     const RemoteInput input(window, recordInto(events));
 
-    post(ECORE_EVENT_KEY_DOWN, "XF86AudioPlay", 172, kOtherWindow);
-    post(ECORE_EVENT_KEY_UP, "XF86AudioPlay", 172, kOtherWindow);
+    post(ECORE_EVENT_KEY_DOWN, "XF86AudioPlay", 172);
+    post(ECORE_EVENT_KEY_UP, "XF86AudioPlay", 172);
     runMainLoopFor(0.05);
   }
 
