@@ -42,14 +42,14 @@ std::optional<double> kilobytesOf(std::string_view text, std::string_view key) {
 
 ProcessMemory readProcessMemory(const std::string &procSelf) {
   if (const auto rollup = readSmall(procSelf + "/smaps_rollup")) {
-    if (const auto pss = kilobytesOf(*rollup, "Pss")) {
+    if (const auto pss = kilobytesOf(*rollup, "Pss"); pss.has_value()) {
       return {.pssMb = *pss / kKilobytesPerMb,
               .swapMb = kilobytesOf(*rollup, "SwapPss").value_or(0) / kKilobytesPerMb,
               .source = "smaps_rollup"};
     }
   }
   if (const auto status = readSmall(procSelf + "/status")) {
-    if (const auto rss = kilobytesOf(*status, "VmRSS")) {
+    if (const auto rss = kilobytesOf(*status, "VmRSS"); rss.has_value()) {
       return {.pssMb = *rss / kKilobytesPerMb,
               .swapMb = kilobytesOf(*status, "VmSwap").value_or(0) / kKilobytesPerMb,
               .source = "status"};
