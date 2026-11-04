@@ -4,11 +4,15 @@ import { ask, canAsk } from '../cli/ask.ts';
 import { COMMON_OPTIONS, parseCommandArgs, PROJECT_OPTIONS, type Command } from '../cli/command.ts';
 import { formatPath } from '../cli/format.ts';
 import { Reporter } from '../cli/reporter.ts';
+import { readExpoConfig } from '../app/expo-config.ts';
 import { addTizenPlugin, type PluginSetup } from '../config/add-tizen-plugin.ts';
 import { packageIdIssue, suggestedPackageId } from '../config/package-id.ts';
+import { isTizenPluginEntry } from '../config/plugin-entry.ts';
+import { resolveTizenConfig } from '../config/tizen-config.ts';
 import { TIZEN_PLUGIN } from '../config/tizen-settings.ts';
 import { FixableError } from '../errors.ts';
 import { setUpMetroConfig, type MetroSetup } from '../metro/set-up-metro-config.ts';
+import { DEFAULT_TARGET, rootstrapFor } from '../tizen/target.ts';
 
 const OPTIONS = {
   package: {
@@ -77,6 +81,25 @@ function reportMetro(reporter: Reporter, setup: MetroSetup, cwd: string): void {
   reporter.field('Metro config', `${file} ${done}`);
 }
 
+function appFloor(root: string): string {
+  try {
+    const config = resolveTizenConfig(readExpoConfig(root), (name) =>
+      isTizenPluginEntry(root, name),
+    );
+    return config.platform ?? DEFAULT_TARGET.platformVersion;
+  } catch {
+    return DEFAULT_TARGET.platformVersion;
+  }
+}
+
+function reportRootstrap(reporter: Reporter, root: string): void {
+  const floor = appFloor(root);
+  const { sdkPackage } = rootstrapFor({ ...DEFAULT_TARGET, platformVersion: floor });
+  reporter.note(
+    `Builds for Tizen ${floor}, the app's floor, need ${sdkPackage} from Tizen Studio's Package Manager: npx rn-tizen doctor checks it.`,
+  );
+}
+
 /** `rn-tizen init`: lists the config plugin in the app's config and wraps its Metro config with `withTizen`. */
 export const initCommand: Command = {
   name: 'init',
@@ -101,6 +124,7 @@ export const initCommand: Command = {
     );
     reportMetro(reporter, setUpMetroConfig(root), context.cwd);
     reporter.line();
+    reportRootstrap(reporter, root);
     reporter.note(
       'Next: npx expo start, then press shift+m and pick Run on TV or Run in simulator.',
     );
