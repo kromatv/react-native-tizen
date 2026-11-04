@@ -86,10 +86,10 @@ macOS on Apple silicon is the only build host verified so far.
   with, from its Package Manager, `IOT-Headed-6.0-NativeAppDevelopment-CLI` (the
   Tizen 6.0 rootstrap the native build links against), `NativeToolchain-Gcc-14.2`
   (the GCC runtime it links) and the Samsung Certificate Extension. A package
-  built against 6.0 runs on every later Tizen; a higher `platform` floor needs
-  that version's rootstrap, and `npx rn-tizen doctor` names it. `rn-tizen`
-  never runs Tizen Studio's `sdb` or `tizen` tools: it reaches the TV and signs
-  the package itself.
+  built against 6.0 runs on every later Tizen. Another floor takes its own
+  rootstrap package, which `npx rn-tizen init` and `npx rn-tizen doctor` name.
+  `rn-tizen` never runs Tizen Studio's `sdb` or `tizen` tools: it reaches the
+  TV and signs the package itself.
 - LLVM, CMake, Ninja and .NET:
 
   ```sh
@@ -133,10 +133,11 @@ npx expo install @kromatv/react-native-tizen
 npx rn-tizen init
 ```
 
-The commands here use npm's `npx`. With another package manager, run
-`rn-tizen` through its own runner: `bunx rn-tizen`, `pnpm exec rn-tizen` or
-`yarn rn-tizen`. In a Bun workspace `npx rn-tizen` answers 404, because npm
-looks for the bin at the workspace root, where Bun does not link it.
+The commands here use npm's `npx`. With Bun, pnpm or Yarn, run `rn-tizen` with
+`bunx`, `pnpm exec` or `yarn` instead, as `init` prints them. In a Bun
+workspace `npx rn-tizen` answers 404: npm finds no bin at the workspace root,
+where Bun does not link it, and asks the npm registry for a package of that
+name.
 
 `rn-tizen init` gives the config plugin Expo listed in `app.json` your app's
 Tizen package id. It asks for one, suggesting your Android package or one made

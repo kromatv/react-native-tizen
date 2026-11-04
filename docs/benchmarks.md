@@ -198,17 +198,10 @@ bun scripts/bench-server.ts listen > release.jsonl &
 rn-tizen install /tmp/bench-release.tpk --device <tv ip> --keep-signature --launch
 
 # development: frames
-rm -rf tizen
 rn-tizen package --dev --platform 9.0 --device <tv ip> --entry src/screens/bench/main.ts
 rn-tizen install tizen/bin/Release/tizen80/org.rntizen.example-1.0.0.tpk --device <tv ip> --keep-signature --launch
 rn-tizen perf --device <tv ip> --duration 135 --out perf.jsonl
 ```
-
-Delete `tizen/` between a development and a release package of the same app.
-`rn-tizen` copies the runtime with its build time, and the .NET build keeps a
-library in its output that looks newer, so a release package made after a
-development one can carry the development runtime. Check the size the
-`Native runtime` step prints against the `.tpk`'s `lib/`.
 
 ## Raw results
 
