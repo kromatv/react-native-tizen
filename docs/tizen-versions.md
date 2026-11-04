@@ -89,7 +89,7 @@ views draw nothing below 6.5.
 | Where | What |
 |---|---|
 | Build machine | At the 6.0 floor the runtime builds for armv7 (IoT Headed 6.0 `device`), aarch64 (IoT Headed 6.0 `device64`) and x86_64 (10.0 `emulator64`); every import resolves on the rootstraps of 6.0 to 10.0 for its CPU. A `6.0` package builds (`tizen80`, `api-version="6.0"`). |
-| GQ75LS03DAUXZG, 2024, Tizen 9.0 | See the pull request that made 6.0 the default |
+| GQ75LS03DAUXZG, 2024 Frame, Tizen 9.0 (2026-11-04) | A 6.0-floor development package (runtime linked against IoT Headed 6.0, shell `tizen80`, `api-version="6.0"`) installs, launches and runs the example's platform screens: voice registers with Samsung's service, `Platform.Version` is 9, `Voice.unavailableReason` null, `canSelectTitles` true, a video plays in a view, and a Smart Hub preview publishes through `ContentDBAPI` |
 | TV emulators | Not run, for three reasons below |
 
 The emulators cannot stand in here:

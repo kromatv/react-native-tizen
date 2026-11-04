@@ -204,6 +204,10 @@ The .NET shell (`shell/`), compiled with `dotnet build` per target framework
 | `tizen40` (API4), `tizen50` (API5) | fails: no `System.Text.Json` (`ShellConfig`, `TilePayload`, `PreviewPublisher`, `VoiceCommands`), no `Tizen.Applications.EventManager` (`VoiceChannel`) |
 | `tizen60` (API6), `tizen80` (API8) | builds unchanged |
 
+A package with the shell at `tizen80`, `api-version="6.0"` and the runtime
+linked against IoT Headed 6.0 installs and runs on the test TV (Tizen 9.0),
+voice and the Smart Hub preview included. H, 2026-11-04
+
 Manifest and privileges: every privilege the shell or a feature asks for
 (`internet`, `network.get`, `mediastorage`, `externalstorage`,
 `appmanager.launch`, `display`) is `Public` in the .NET privilege list of every
