@@ -22,7 +22,7 @@ namespace rntizen {
 /// written, so that line goes to the next listener.
 class NetworkLogSink final : public LogSink {
  public:
-  NetworkLogSink(std::string host, std::uint16_t port, std::string app);
+  NetworkLogSink(std::string host, std::uint16_t port, const std::string &app);
   ~NetworkLogSink() override;
 
   NetworkLogSink(const NetworkLogSink &) = delete;
@@ -32,6 +32,7 @@ class NetworkLogSink final : public LogSink {
 
  private:
   void run();
+  bool ensureConnected(std::unique_lock<std::mutex> &lock);
   void adopt(int socket);
   void disconnect();
   void markUnreachable();

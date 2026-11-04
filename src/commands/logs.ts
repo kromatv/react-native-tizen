@@ -47,8 +47,9 @@ export const logsCommand: Command = {
     const app = targetPackage(values.package, dir, 'logs');
     const server = await listenForLogs(parsePort(values.port, '--port', 'logs'), printer, { app });
     const address = pickLanAddress(networkInterfaces(), null) ?? 'this computer';
-    const which = app === null ? 'every app' : app;
-    reporter.line(`Listening on ${address}:${server.port} for ${which}. Press Ctrl+C to stop.`);
+    reporter.line(
+      `Listening on ${address}:${server.port} for ${app ?? 'every app'}. Press Ctrl+C to stop.`,
+    );
     reporter.note(
       'Launch a development build on the TV (rn-tizen run, or from its apps) to see its logs.',
     );

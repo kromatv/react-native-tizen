@@ -32,7 +32,7 @@ std::string helloLine(const std::string &app) {
 
 } // namespace
 
-NetworkLogSink::NetworkLogSink(std::string host, std::uint16_t port, std::string app)
+NetworkLogSink::NetworkLogSink(std::string host, std::uint16_t port, const std::string &app)
     : host_(std::move(host)), port_(port), hello_(helloLine(app)), thread_([this] { run(); }) {}
 
 NetworkLogSink::~NetworkLogSink() {
@@ -93,25 +93,34 @@ void NetworkLogSink::markUnreachable() {
   }
 }
 
+bool NetworkLogSink::ensureConnected(std::unique_lock<std::mutex> &lock) {
+  if (socket_ >= 0) return true;
+  lock.unlock();
+  const int socket = connectTcp(host_, port_, kConnectTimeout, [this] { return isStopping(); });
+  lock.lock();
+  if (socket < 0) {
+    markUnreachable();
+    wake_.wait_for(lock, kRetryDelay, [this] { return stopping_; });
+    return false;
+  }
+  adopt(socket);
+  return true;
+}
+
 void NetworkLogSink::run() {
   std::unique_lock lock(mutex_);
   while (true) {
     wake_.wait(lock, [this] { return stopping_ || !pending_.empty(); });
     if (pending_.empty() || (stopping_ && socket_ < 0)) return;
-    if (socket_ < 0) {
-      lock.unlock();
-      const int socket = connectTcp(host_, port_, kConnectTimeout, [this] { return isStopping(); });
-      lock.lock();
-      if (socket < 0) {
-        markUnreachable();
-        wake_.wait_for(lock, kRetryDelay, [this] { return stopping_; });
-        continue;
-      }
-      adopt(socket);
-    }
+    if (!ensureConnected(lock)) continue;
     const bool greeting = !greeted_;
-    std::string line = greeting ? hello_ : std::move(pending_.front());
-    if (!greeting) pending_.pop_front();
+    std::string line;
+    if (greeting) {
+      line = hello_;
+    } else {
+      line = std::move(pending_.front());
+      pending_.pop_front();
+    }
     const int socket = socket_;
     lock.unlock();
     const bool delivered = !peerHasClosed(socket) && sendAll(socket, line.data(), line.size());
