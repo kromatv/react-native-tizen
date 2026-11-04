@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { ask, canAsk } from '../cli/ask.ts';
 import { COMMON_OPTIONS, parseCommandArgs, PROJECT_OPTIONS, type Command } from '../cli/command.ts';
 import { formatPath } from '../cli/format.ts';
+import { packageRunner } from '../cli/package-runner.ts';
 import { Reporter } from '../cli/reporter.ts';
 import { readExpoConfig } from '../app/expo-config.ts';
 import { addTizenPlugin, type PluginSetup } from '../config/add-tizen-plugin.ts';
@@ -96,7 +97,7 @@ function reportRootstrap(reporter: Reporter, root: string): void {
   const floor = appFloor(root);
   const { sdkPackage } = rootstrapFor({ ...DEFAULT_TARGET, platformVersion: floor });
   reporter.note(
-    `Builds for Tizen ${floor}, the app's floor, need ${sdkPackage} from Tizen Studio's Package Manager: npx rn-tizen doctor checks it.`,
+    `Builds for Tizen ${floor}, the app's floor, need ${sdkPackage} from Tizen Studio's Package Manager: ${packageRunner(root)} rn-tizen doctor checks it.`,
   );
 }
 
@@ -114,7 +115,7 @@ export const initCommand: Command = {
     if (!existsSync(join(root, 'package.json'))) {
       throw new FixableError(
         `${root} has no package.json`,
-        'Run npx rn-tizen init in the app, or pass --project <dir>.',
+        `Run ${packageRunner(root)} rn-tizen init in the app, or pass --project <dir>.`,
       );
     }
     reportPlugin(
@@ -126,7 +127,7 @@ export const initCommand: Command = {
     reporter.line();
     reportRootstrap(reporter, root);
     reporter.note(
-      'Next: npx expo start, then press shift+m and pick Run on TV or Run in simulator.',
+      `Next: ${packageRunner(root)} expo start, then press shift+m and pick Run on TV or Run in simulator.`,
     );
   },
 };

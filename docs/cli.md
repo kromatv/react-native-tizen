@@ -24,7 +24,10 @@ and where Samsung's certificates are created, once. A TV takes one sdb connectio
 Tizen Studio's `sdb` or Device Manager is connected to it, `rn-tizen` cannot
 reach it: `sdb disconnect <tv ip>` frees it.
 
-`rn-tizen <command> --help` lists a command's options.
+`rn-tizen <command> --help` lists a command's options. In an app, run it with
+the app's package manager: `npx rn-tizen`, `bunx rn-tizen`, `pnpm exec rn-tizen`
+or `yarn rn-tizen`. `init` and the hints `rn-tizen` prints name the one the
+app's lockfile points to.
 
 ## Configuration
 

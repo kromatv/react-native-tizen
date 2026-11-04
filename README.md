@@ -55,6 +55,10 @@ An app that already has a Metro config keeps it: `init` wraps its export with
 `withTizen`, or prints the two lines to add when it cannot change the file
 safely. Running `init` again changes nothing.
 
+With Bun, pnpm or Yarn, run these commands with `bunx`, `pnpm exec` or `yarn`
+where they say `npx`, as `init` prints them: in a Bun workspace,
+`npx rn-tizen` asks the npm registry for a package of that name and fails.
+
 ### 3. Put the TV in Developer mode
 
 On the TV, open Apps, type `12345` on the remote, turn Developer mode on with

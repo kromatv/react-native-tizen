@@ -87,6 +87,15 @@ describe('rn-tizen init', () => {
     );
   });
 
+  it("gives the commands to run with the app's package manager", async () => {
+    writeFileSync(join(dir, 'bun.lock'), '');
+
+    await run('--package', 'com.example.tv');
+
+    expect(output.stdout()).toContain('Next: bunx expo start');
+    expect(output.stdout()).toContain('bunx rn-tizen doctor checks it');
+  });
+
   it("names the rootstrap package the app's floor needs", async () => {
     await run('--package', 'com.example.tv');
     vi.mocked(readExpoConfig).mockReturnValueOnce({
