@@ -36,12 +36,8 @@ std::string trimmed(std::string_view text) {
   return std::string(text.substr(first, last - first + 1));
 }
 
-using CurlUrl = std::unique_ptr<CURLU, decltype(&curl_url_cleanup)>;
-
-// curl before 8.0 (Tizen 6.0 to 8.0 ship 7.68 to 7.86) takes a non-const handle.
-std::optional<std::string> urlPart(const CurlUrl &url, CURLUPart part) {
-  char *value = nullptr;
-  if (curl_url_get(url.get(), part, &value, 0) != CURLUE_OK) return std::nullopt;
+std::optional<std::string> takeCurlString(CURLUcode code, char *value) {
+  if (code != CURLUE_OK) return std::nullopt;
   std::string result(value);
   curl_free(value);
   return result;
@@ -87,23 +83,29 @@ bool namedIn(const std::vector<std::pair<std::string, std::string>> &headers, st
 } // namespace
 
 WebSocketEndpoint parseWebSocketUrl(const std::string &url) {
-  CurlUrl parsed(curl_url(), &curl_url_cleanup);
+  std::unique_ptr<CURLU, decltype(&curl_url_cleanup)> parsed(curl_url(), &curl_url_cleanup);
   if (curl_url_set(parsed.get(), CURLUPART_URL, url.c_str(), CURLU_NON_SUPPORT_SCHEME) != CURLUE_OK) {
     throw std::invalid_argument(std::format("Invalid WebSocket URL {}", url));
   }
-  const auto scheme = lowercase(urlPart(parsed, CURLUPART_SCHEME).value_or(""));
+  // curl before 8.0 (Tizen 6.0 to 8.0 ship 7.68 to 7.86) takes a non-const handle.
+  const auto urlPart = [&parsed](CURLUPart part) {
+    char *value = nullptr;
+    const auto code = curl_url_get(parsed.get(), part, &value, 0);
+    return takeCurlString(code, value);
+  };
+  const auto scheme = lowercase(urlPart(CURLUPART_SCHEME).value_or(""));
   const bool secure = scheme == "wss" || scheme == "https";
   if (!secure && scheme != "ws" && scheme != "http") {
     throw std::invalid_argument(std::format("Unsupported WebSocket URL {}", url));
   }
-  const auto host = urlPart(parsed, CURLUPART_HOST).value_or("");
-  const auto port = urlPart(parsed, CURLUPART_PORT);
+  const auto host = urlPart(CURLUPART_HOST).value_or("");
+  const auto port = urlPart(CURLUPART_PORT);
   const auto authority = port ? host + ":" + *port : host;
-  const auto query = urlPart(parsed, CURLUPART_QUERY);
+  const auto query = urlPart(CURLUPART_QUERY);
   return WebSocketEndpoint{
       .connectUrl = std::string(secure ? "https://" : "http://") + authority + "/",
       .authority = authority,
-      .target = urlPart(parsed, CURLUPART_PATH).value_or("/") + (query ? "?" + *query : ""),
+      .target = urlPart(CURLUPART_PATH).value_or("/") + (query ? "?" + *query : ""),
       .origin = std::string(secure ? "https://" : "http://") + authority,
   };
 }
