@@ -20,7 +20,8 @@ with a Public certificate.
 
 The runtime is compiled with clang and linked with lld against a mirror of the
 package's floor rootstrap (6.0 by default, glibc 2.30), with GCC 14's libstdc++
-linked statically and three glibc symbols supplied by a hidden shim. One build
+linked statically and the glibc symbols it needs beyond 2.30 (three, and
+`_dl_find_object` on aarch64 and x86_64) supplied by a hidden shim. One build
 then runs on every newer TV. Samsung's own GCC for macOS needs Intel Homebrew
 libraries, and lld rejects the rootstrap's stubs as shipped, hence the mirror
 (`runtime/cmake/toolchain/tizen.cmake`, `src/sysroot/`). Tizen Studio publishes
