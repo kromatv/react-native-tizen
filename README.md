@@ -24,7 +24,7 @@
 <p align="center">
   <img alt="The example app on a Samsung TV: the title React Native, native on a Samsung TV, and three cards for Hermes, Fabric and Expo" src="https://raw.githubusercontent.com/kromatv/react-native-tizen/main/docs/assets/screenshot-home.png" width="720">
   <br>
-  <sub>The example app on a Samsung The Frame (2024), Tizen 9.0, captured by the app itself.</sub>
+  <sub>The example app on a Samsung The Frame (2024), Tizen 9.0, captured by the app itself with <code>rn-tizen screenshot</code>, which never includes video.</sub>
 </p>
 
 ## Why
@@ -50,7 +50,9 @@ For an Expo app, Tizen is one more platform. The same project and the same
   certificate under shift+m.
 - **Development builds.** Fast Refresh, `r` to reload, `console.log` in the
   Expo terminal, LogBox on the TV, and React Native DevTools on the TV's Hermes
-  with `j`.
+  with `j`. `rn-tizen screenshot` saves what a development build draws, on a
+  retail TV too. It captures the app's window only: video plays on a plane
+  under it, so a video's area comes out transparent.
 - **The remote, as on Apple TV.** `useTVEventHandler` gets one event per
   press, a key held for 300 ms sends `longSelect` or `longUp`, and Back reaches
   `BackHandler`.
@@ -70,75 +72,147 @@ For an Expo app, Tizen is one more platform. The same project and the same
   `.tpk` and `.wgt` packages in TypeScript and finds TVs on the network in about
   five seconds. The same code is a Node API.
 - **A simulator.** The same runtime, built for aarch64 Linux, runs in a VM on
-  an Apple silicon Mac, with screenshots, remote keys and native backtraces.
+  an Apple silicon Mac, with screenshots, remote keys and native backtraces. It
+  has no media player, so it plays no video.
 
 ## Quick start
 
-You need:
+### 1. Install the tools
 
-- macOS. Apple silicon is the only host verified so far.
-- [Node.js](https://nodejs.org) 22.13 or newer.
+macOS on Apple silicon is the only build host verified so far.
+
+- [Node.js](https://nodejs.org) 22.13 or newer, which runs the CLI and Expo.
 - [Tizen Studio](https://developer.tizen.org/development/tizen-studio/download)
-  for two things only. From its Package Manager, install
-  `TIZEN-9.0-NativeAppDevelopment-CLI`, the rootstrap and GCC runtime the native
-  build links against, and the Samsung Certificate Extension. Then, once, in
-  Tools > Certificate Manager, create a Samsung certificate profile with your
-  TV's DUID (`npx rn-tizen devices` prints it). A retail TV only installs
-  packages signed with Samsung's author and distributor certificates.
-  `rn-tizen` never runs Tizen Studio's `sdb` or `tizen` tools.
-- LLVM and the build tools:
+  with, from its Package Manager, `IOT-Headed-6.0-NativeAppDevelopment-CLI` (the
+  Tizen 6.0 rootstrap the native build links against), `NativeToolchain-Gcc-14.2`
+  (the GCC runtime it links) and the Samsung Certificate Extension. A package
+  built against 6.0 runs on every later Tizen; a higher `platform` floor needs
+  that version's rootstrap, and `npx rn-tizen doctor` names it. `rn-tizen`
+  never runs Tizen Studio's `sdb` or `tizen` tools: it reaches the TV and signs
+  the package itself.
+- LLVM, CMake, Ninja and .NET:
 
   ```sh
   brew install llvm lld cmake ninja dotnet ccache
   ```
 
-- The TV in Developer mode: open Apps, type `12345` on the remote, turn
-  Developer mode on with your computer's IP address, then restart the TV.
+### 2. Put the TV in Developer mode
 
-In an Expo app (SDK 58), point `react-native` at
-[react-native-tvos](https://github.com/react-native-tvos/react-native-tvos),
-which brings `useTVEventHandler` and the other TV APIs:
+On the TV, open Apps, type `12345` on the remote, turn Developer mode on with
+your computer's IP address, then restart the TV.
+
+### 3. Add the package
+
+In an Expo SDK 58 app, point `react-native` at
+[react-native-tvos](https://github.com/react-native-tvos/react-native-tvos), the
+TV fork of React Native this package is built and tested against. It brings
+`useTVEventHandler` and the other TV APIs. In `package.json`:
 
 ```json
 {
   "dependencies": {
     "react-native": "npm:react-native-tvos@0.88.0-0"
+  },
+  "overrides": {
+    "react-native": "$react-native"
   }
 }
 ```
 
-Then add the package and set it up:
+The override keeps a single React Native in the app. react-native-tvos's own
+list package asks for `react-native` 0.88.0, so without it npm installs stock
+React Native beside the fork, and the app stops on the TV with `"main" has not
+been registered`. With Yarn or pnpm, put `npm:react-native-tvos@0.88.0-0` under
+`resolutions` or `pnpm.overrides` instead.
+
+Then install, add the package and set the app up:
 
 ```sh
+npm install
 npx expo install @kromatv/react-native-tizen
 npx rn-tizen init
 ```
 
-`init` lists the config plugin in `app.json` with your app's Tizen package id,
-and writes `metro.config.mjs`:
+The commands here use npm's `npx`. With another package manager, run
+`rn-tizen` through its own runner: `bunx rn-tizen`, `pnpm exec rn-tizen` or
+`yarn rn-tizen`. In a Bun workspace `npx rn-tizen` answers 404, because npm
+looks for the bin at the workspace root, where Bun does not link it.
+
+`rn-tizen init` gives the config plugin Expo listed in `app.json` your app's
+Tizen package id. It asks for one, suggesting your Android package or one made
+from the slug. It also writes `metro.config.mjs`, which teaches Metro the
+`tizen` platform:
 
 ```js
 import { getDefaultConfig } from 'expo/metro-config';
 import { withTizen } from '@kromatv/react-native-tizen/metro';
-
 export default withTizen(getDefaultConfig(import.meta.dirname));
 ```
 
-Start Expo, press **shift+m**, pick **Run on TV** and give it the TV's IP
-address. Later runs can leave it empty to use the same TV.
+An app that already has a Metro config keeps it: `init` wraps its export with
+`withTizen`, or prints the two lines to add when it cannot change the file
+safely. Running `init` again changes nothing.
+
+### 4. Get a Samsung certificate for your TV, once
+
+```sh
+npx rn-tizen devices
+```
+
+lists the Samsung TVs on your network with each one's DUID. In Tizen Studio,
+Tools, Certificate Manager, create a Samsung profile with that DUID and make it
+the active profile. Samsung issues both its certificates, and a retail TV takes
+no other. `rn-tizen` reads the profile from there.
+
+### 5. Run it from `expo start`
 
 ```sh
 npx expo start
 ```
 
-The first run compiles the native runtime, which takes a few minutes. Later runs
-rebuild only what changed. `npx rn-tizen doctor` checks every requirement above
-and prints the fix for anything missing.
+Press **shift+m** ("more tools") and pick `@kromatv/react-native-tizen`. Expo
+shows the command each entry runs and asks "(y/N)" before running it; answer
+`y`.
 
-A store package is a release build:
+- **Run on TV** builds a development build, installs it on the TV and launches
+  it. It loads its JavaScript from the dev server you are running. Give it the
+  TV's IP address the first time; later, leave the address empty to use the TV
+  you used last.
+- **Run in simulator** does the same on the virtual TV of
+  [the simulator](simulator/README.md).
+- **Find TVs** lists the Samsung TVs on your network, with their Developer
+  mode, sdb and DUID.
+- **Create certificate** makes an author certificate.
+
+Each command prints the address of a page inside the dev server, where you can
+follow its progress and logs. The first run builds the native runtime, which
+takes a few minutes; later runs only rebuild what changed. Run on TV and Run
+in simulator check the Metro config first, and say to run `npx rn-tizen init`
+when it has no `withTizen`. `npx rn-tizen doctor` names the exact fix for
+anything a build needs.
+
+Expo has no `expo run:tizen` and no single-key shortcut for Tizen, and
+`expo prebuild` and `expo export --platform tizen` do not know the platform.
+For a script beside Expo's own, add one to `package.json`:
+
+```json
+{
+  "scripts": {
+    "android": "expo start --android",
+    "tizen": "rn-tizen run"
+  }
+}
+```
+
+`npm run tizen` packages the app with its JavaScript inside, installs it on the
+only TV used before, launches it and prints its logs until Ctrl+C.
+
+Store packages need a release build, which `package` makes; `--dev` makes a
+development one that streams its logs:
 
 ```sh
 npx rn-tizen package
+npx rn-tizen package --dev
 ```
 
 Publishing to Samsung's store needs a Seller Office partner group, because the
@@ -231,8 +305,9 @@ export function Player({ uri }: { uri: string }) {
 }
 ```
 
-The TV draws video on its own plane, under the UI. What expo-video does on
-Tizen, call by call, is in
+The TV draws video on its own plane, under the UI, so `rn-tizen screenshot`
+shows the video's area transparent. What expo-video does on Tizen, call by
+call, is in
 [the media reference](docs/reference/tizen-media-playback.md#7-what-react-native-tizen-implements).
 
 ### Voice
