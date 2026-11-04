@@ -17,6 +17,7 @@ a launch send. Checked on 2026-11-03.
 | sdb is a client and a server on the computer and a daemon on the device; the server "manages communication between the client and the daemon". | D | [td-sdb] |
 | `sdb connect <host>[:<port>]` reaches a device over TCP, port 26101 by default. | D | [td-sdb], [sam-device] |
 | The TV takes one host connection at a time. While Tizen Studio's sdb server held one, a second TCP connection to 26101 was accepted, then reset within 10 ms, before any packet. Once the server disconnected, the same connection got the TV's banner. | H | |
+| The TV holds a connection a moment after the host closed it. `rn-tizen install` opens one connection to check the TV and closes it, then opens the install's: in a benchmark of 25 installs, 3 failed with "refused the connection" right after the check succeeded (2026-11-04). | H | |
 | A TV answers only the host PC named in its Developer mode settings. | D | [sam-device] |
 
 ## 2. Packets
@@ -98,6 +99,9 @@ prints `The package is not exist.` and sends nothing else (H).
 
 - One connection per command, closed when the command ends, so the TV's only
   connection is free between commands (section 1).
+- A refused connection is tried again after 100, 250, 500 and 1000 ms, about
+  two seconds in all, since the TV still holds the one just closed (section 1).
+  A TV that another host holds is reported as refused after those tries.
 - The handshake, `capability:`, the push to `<sdk_toolpath>/tmp/<file>` and
   `0 vd_appinstall`, and `0 execute` as Tizen Studio sends them, and
   `0 appuninstall` as `sdb uninstall` does.
