@@ -21,7 +21,7 @@ function file(name: string, text: string, modified: Date): string {
   return path;
 }
 
-const yearAgo = new Date(Date.now() - 365 * 24 * 3_600_000);
+const yearAgo = new Date(Math.floor(Date.now() / 1000 - 365 * 24 * 3600) * 1000);
 
 describe('stageFile', () => {
   it('dates a new or changed copy now, whatever the time of its source', async () => {
