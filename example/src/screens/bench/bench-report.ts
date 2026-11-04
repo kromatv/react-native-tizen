@@ -4,22 +4,24 @@ import { BackHandler } from 'react-native';
 
 const REPORT_URL = process.env.EXPO_PUBLIC_BENCH_REPORT_URL;
 const STATUS_FILE = 'file:///proc/self/status';
+const VM_RSS = /^VmRSS:\s+(\d+) kB$/m;
+const VM_HWM = /^VmHWM:\s+(\d+) kB$/m;
 
 export interface MemoryReading {
   readonly rssMb: number;
   readonly peakRssMb: number;
 }
 
-function statusKb(status: string, field: string): number | null {
-  const match = new RegExp(`^${field}:\\s+(\\d+) kB$`, 'm').exec(status);
+function statusKb(status: string, field: RegExp): number | null {
+  const match = field.exec(status);
   return match?.[1] === undefined ? null : Number(match[1]);
 }
 
 function readMemory(): MemoryReading | null {
   try {
     const status = new File(STATUS_FILE).textSync();
-    const rss = statusKb(status, 'VmRSS');
-    const peak = statusKb(status, 'VmHWM');
+    const rss = statusKb(status, VM_RSS);
+    const peak = statusKb(status, VM_HWM);
     return rss === null || peak === null ? null : { rssMb: rss / 1024, peakRssMb: peak / 1024 };
   } catch (error) {
     console.warn(`[bench] cannot read ${STATUS_FILE}: ${String(error)}`);
